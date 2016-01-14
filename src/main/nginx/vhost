@@ -1,0 +1,37 @@
+server {
+	listen       80;
+	listen       443 ssl;
+	server_name  robin.algorythm.de;
+	root /var/www/robin;
+	access_log /var/log/nginx/robin_access.log;
+	error_log /var/log/nginx/robin_error.log;
+
+	ssl_certificate     /etc/ssl/certs/server.crt;
+	ssl_certificate_key /etc/ssl/private/server.key;
+
+	location = / {
+		# First attempt to serve request as file, then
+		# as directory, then fall back to displaying a 404.
+		try_files $uri $uri/ =404;
+	}
+
+	location = /files {
+		autoindex on;
+	}
+
+	location = /upload {
+		# taken from https://coderwall.com/p/swgfvw/nginx-direct-file-upload-without-passing-them-through-backend
+		auth_basic			"Robin's upload";
+		auth_basic_user_file		conf/robin.htpasswd;
+		limit_except POST		{ deny all; }
+
+		client_body_temp_path		/var/www/robin/files;
+		client_body_in_file_only	on;
+		client_body_buffer_size		128K;
+		client_max_body_size		1000M;
+		client_body_timeout		120s;
+
+		#return 303 $scheme://robin.algorythm.de;
+		return 204;
+	}
+}
