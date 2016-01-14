@@ -1,37 +1,66 @@
 server {
-	listen       80;
-	listen       443 ssl;
-	server_name  robin.algorythm.de;
-	root /var/www/robin;
-	access_log /var/log/nginx/robin_access.log;
-	error_log /var/log/nginx/robin_error.log;
+	listen		80;
+	listen		443 ssl;
+	server_name	robin.algorythm.de;
+	root		/var/www/robin;
+	access_log	/var/log/nginx/robin_access.log;
+	error_log	/var/log/nginx/robin_error.log debug;
 
 	ssl_certificate     /etc/ssl/certs/server.crt;
 	ssl_certificate_key /etc/ssl/private/server.key;
 
-	location = / {
+	location / {
+		alias /var/www/robin/ui/;
 		# First attempt to serve request as file, then
 		# as directory, then fall back to displaying a 404.
 		try_files $uri $uri/ =404;
 	}
 
-	location = /files {
+	location /files {
 		autoindex on;
+#		client_body_temp_path /var/nginx-client-body;
+		client_body_buffer_size         128K;
+		client_max_body_size            1000M;
+		client_body_timeout             120s;
+		dav_methods			PUT DELETE MKCOL COPY MOVE;
+		dav_ext_methods			PROPFIND OPTIONS;
+		dav_access			group:rw all:r;
+		create_full_put_path		on;
 	}
 
-	location = /upload {
-		# taken from https://coderwall.com/p/swgfvw/nginx-direct-file-upload-without-passing-them-through-backend
-		auth_basic			"Robin's upload";
-		auth_basic_user_file		conf/robin.htpasswd;
-		limit_except POST		{ deny all; }
+       location ~ '/image/(.*?)-(\d+)x(\d+)(\.[^\.]+)$' {
+		set $image	$1;
+		set $width	$2;
+		set $height	$3;
+		set $extension	$4;
 
-		client_body_temp_path		/var/www/robin/files;
-		client_body_in_file_only	on;
-		client_body_buffer_size		128K;
-		client_max_body_size		1000M;
-		client_body_timeout		120s;
-
-		#return 303 $scheme://robin.algorythm.de;
-		return 204;
+		alias /var/www/robin/files/$image$extension;
+		image_filter_buffer		5m;
+		image_filter_jpeg_quality	75;
+		image_filter resize		$width	$height;
+#		image_filter crop		100	100;
 	}
+
+	location /video {
+		alias /var/www/robin/files;
+		mp4;
+		mp4_buffer_size       1m;
+		mp4_max_buffer_size   5m;
+	}
+
+#	location = /upload {
+#		# taken from https://coderwall.com/p/swgfvw/nginx-direct-file-upload-without-passing-them-through-backend
+#		auth_basic			"Robin's upload";
+#		auth_basic_user_file		conf/robin.htpasswd;
+#		limit_except POST		{ deny all; }
+#
+#		client_body_temp_path		/var/www/robin/files;
+#		client_body_in_file_only	on;
+#		client_body_buffer_size		128K;
+#		client_max_body_size		1000M;
+#		client_body_timeout		120s;
+#
+#		#return 303 $scheme://robin.algorythm.de;
+#		return 204;
+#	}
 }

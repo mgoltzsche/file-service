@@ -62,6 +62,13 @@ WebDavClient.prototype._parsePropfindResult = function(xhr) {
 	var docs = [],
 	    childNodes = xhr.responseXML.childNodes[0].childNodes;
 
+	docs.href = function() {
+		return this[0].href;
+	};
+	docs.children = function() {
+		return this.slice(1);
+	};
+
 	for (var i = 0; i < childNodes.length; i++) {
 		var response = childNodes[i],
 		    doc = {

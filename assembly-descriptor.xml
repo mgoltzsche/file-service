@@ -9,10 +9,6 @@
 	</formats>
 	<fileSets>
 		<fileSet>
-			<outputDirectory></outputDirectory>
-			<directory>src/main/html</directory>
-		</fileSet>
-		<fileSet>
 			<outputDirectory>css</outputDirectory>
 			<directory>src/main/css</directory>
 		</fileSet>

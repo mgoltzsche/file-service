@@ -1,6 +1,6 @@
 <html>
 <head>
-<script type="text/javascript" src="/js/webdav-client.min.js"></script>
+<script type="text/javascript" src="/js/webdav-client-${version}.min.js"></script>
 </head>
 <body>
 test vhost
@@ -8,42 +8,8 @@ test vhost
 	<input id="fileinput" name="media" type="file" />
 	<input type="submit" value="upload" />
 	<br />
-	<progress id="progressBar" max="100" value="0" />
+	<progress id="progressBar" max="100" value="0">a</progress>
 </form>
-<div id="dav-browser">
-</div>
-<script type="text/javascript">
-function startUpload() {
-	var fileInput = document.getElementById("fileinput");
-	var progressBar = document.getElementById("progressBar");
-	var WebDavClient = require('./webdav-client.js');
-	var client = new WebDavClient("/files", function(e) {
-		progressBar.value = e.loaded / e.total * 100;
-	});
-
-	if (fileInput.files.length == 0) {
-		alert("Please choose a file");
-		return;
-	}
-
-	progressBar.value = 0;
-
-	client.put('/' + fileInput.files[0].name, fileInput.files[0], function() {
-	});
-}
-
-var form = document.getElementById('uploadform');
-
-form.onsubmit = function(e) {
-	try {
-		startUpload();
-	} catch(e) {
-		console.log("D'oh! " + e);
-		alert("D'oh! " + e);
-	}
-
-	return false;
-}
-</script>
+<div id="webdav-ui">initial content</div>
 </body>
 </html>

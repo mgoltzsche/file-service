@@ -35,10 +35,10 @@ gulp.task('sass', ['clean'], function() {
 });
 
 gulp.task('browserify', ['clean', 'lint'], function() {
-	return browserify(pkg.main)
-		.transform(babelify, {presets: ["es2015"]})
+	return browserify('js/main.js')
+		.transform(babelify, {presets: ['es2015', 'react']}) // compile with ECMA Script 6 and react
 		.bundle()
-		.pipe(source(pkg.name + '.min.js')) // converts to vinyl src with name
+		.pipe(source(pkg.name + '-' + pkg.version + '.min.js')) // converts to vinyl src with name
 		.pipe(buffer())                     // converts to vinyl buffer obj
 		.pipe(uglify()) 
 		.pipe(gulp.dest('${basedir}/target/web-distribution/js'));
