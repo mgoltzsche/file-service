@@ -1,12 +1,6 @@
-function WebDavClient(rootUrl, progressHandler, errorHandler) {
-	this._rootUrl = rootUrl;
-	this._progressHandler = progressHandler || function() {};
-	this._errorHandler = errorHandler || function(xhr) {alert('WebDAV request failed with status code ' + xhr.status + '!');};
+function WebDavClient(errorHandler) {
+	this._errorHandler = errorHandler || function(xhr) {alert('WebDAV request failed with HTTP status code ' + xhr.status + '!');};
 }
-
-try {
-	module.exports = WebDavClient;
-} catch(e) {} 
 
 WebDavClient.prototype.propfind = function(path, depth, callback, errorCallback) {
 	var callbackConverter = (function(callback, self) {return function(xhr) {
@@ -25,9 +19,10 @@ WebDavClient.prototype.get = function(path, callback, errorCallback) {
 	var xhr = this._createRequest('GET', path, callback, errorCallback).xhr.send();
 };
 
-WebDavClient.prototype.put = function(path, file, callback, errorCallback) {
+WebDavClient.prototype.put = function(path, file, callback, progressCallback, errorCallback) {
 	var xhr = this._createRequest('PUT', path, callback, errorCallback);
 
+	xhr.upload.onprogress = progressCallback;
 	xhr.setRequestHeader('Content-Type', file.type);
 	xhr.send(file);
 };
@@ -37,7 +32,6 @@ WebDavClient.prototype._createRequest = function(method, path, callback, errorCa
 
 	try {
 		xhr = new XMLHttpRequest();
-		xhr.upload.onprogress = this._progressHandler;
 		xhr.onerror = (function(callback, xhr) {return function() {
 			callback(xhr);
 		};})(errorCallback || this._errorHandler, xhr);
@@ -53,7 +47,7 @@ WebDavClient.prototype._createRequest = function(method, path, callback, errorCa
 		throw("Browser not supported");
 	}
 
-	xhr.open(method, this._rootUrl + path, true);
+	xhr.open(method, path, true);
 
 	return xhr;
 };
@@ -62,13 +56,6 @@ WebDavClient.prototype._parsePropfindResult = function(xhr) {
 	var docs = [],
 	    childNodes = xhr.responseXML.childNodes[0].childNodes;
 
-	docs.href = function() {
-		return this[0].href;
-	};
-	docs.children = function() {
-		return this.slice(1);
-	};
-
 	for (var i = 0; i < childNodes.length; i++) {
 		var response = childNodes[i],
 		    doc = {
@@ -76,6 +63,8 @@ WebDavClient.prototype._parsePropfindResult = function(xhr) {
 			'status': null,
 			'properties': {}
 		};
+
+		if (response.nodeType != 1) continue;
 
 		for (var j = 0; j < response.childNodes.length; j++) {
 			var responseChild = response.childNodes[j];
@@ -86,16 +75,23 @@ WebDavClient.prototype._parsePropfindResult = function(xhr) {
 				doc.status = responseChild.textContent;
 			} else if (responseChild.nodeName === 'D:propstat') {
 				for (var k = 0; k < responseChild.childNodes.length; k++) {
-					var prop = responseChild.childNodes[k];
+					var propstatChild = responseChild.childNodes[k];
 
-					for (var p = 0; p < prop.childNodes.length; p++) {
-						var property = prop.childNodes[p],
-						    propertyName = property.nodeName.split(':')[1];
+					if (propstatChild.nodeName === 'D:status') {
+						doc.status = responseChild.textContent;
+					} else if (propstatChild.nodeName === 'D:prop') {
+						for (var p = 0; p < propstatChild.childNodes.length; p++) {
+							var property = propstatChild.childNodes[p];
 
-						if (propertyName === 'resourcetype' && property.childNodes.length > 0) {
-							doc.resourcetype = property.childNodes[0].nodeName.split(':')[1];
-						} else {
-							doc.properties[propertyName] = property.textContent;
+							if (property.nodeType != 1) continue;
+
+							var propertyName = property.nodeName.split(':')[1];
+	
+							if (propertyName === 'resourcetype' && property.childNodes.length > 0) {
+								doc.resourcetype = property.childNodes[0].nodeName.split(':')[1];
+							} else {
+								doc.properties[propertyName] = property.textContent;
+							}
 						}
 					}
 				}
@@ -107,3 +103,7 @@ WebDavClient.prototype._parsePropfindResult = function(xhr) {
 
 	return docs;
 };
+
+try {
+	module.exports = WebDavClient;
+} catch(e) {}

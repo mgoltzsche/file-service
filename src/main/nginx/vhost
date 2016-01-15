@@ -1,10 +1,10 @@
 server {
-	listen		80;
-	listen		443 ssl;
-	server_name	robin.algorythm.de;
-	root		/var/www/robin;
-	access_log	/var/log/nginx/robin_access.log;
-	error_log	/var/log/nginx/robin_error.log debug;
+	listen      80;
+	listen      443 ssl;
+	server_name robin.algorythm.de;
+	root        /var/www/robin;
+	access_log  /var/log/nginx/robin_access.log;
+	error_log   /var/log/nginx/robin_error.log debug;
 
 	ssl_certificate     /etc/ssl/certs/server.crt;
 	ssl_certificate_key /etc/ssl/private/server.key;
@@ -18,27 +18,28 @@ server {
 
 	location /files {
 		autoindex on;
-#		client_body_temp_path /var/nginx-client-body;
-		client_body_buffer_size         128K;
-		client_max_body_size            1000M;
-		client_body_timeout             120s;
-		dav_methods			PUT DELETE MKCOL COPY MOVE;
-		dav_ext_methods			PROPFIND OPTIONS;
-		dav_access			group:rw all:r;
-		create_full_put_path		on;
+#		client_body_temp_path   /var/nginx-client-body;
+		client_body_buffer_size 128K;
+		client_max_body_size    1000M;
+		client_body_timeout     120s;
+		dav_methods             PUT DELETE MKCOL COPY MOVE;
+		dav_ext_methods         PROPFIND OPTIONS;
+		dav_access              group:rw all:r;
+		create_full_put_path    on;
 	}
 
        location ~ '/image/(.*?)-(\d+)x(\d+)(\.[^\.]+)$' {
-		set $image	$1;
-		set $width	$2;
-		set $height	$3;
-		set $extension	$4;
+		set $image     $1;
+		set $width     $2;
+		set $height    $3;
+		set $extension $4;
 
 		alias /var/www/robin/files/$image$extension;
-		image_filter_buffer		5m;
-		image_filter_jpeg_quality	75;
-		image_filter resize		$width	$height;
-#		image_filter crop		100	100;
+		image_filter_buffer       5m;
+		image_filter_jpeg_quality 75;
+		image_filter_transparency off;
+		image_filter resize       $width $height;
+#		image_filter crop         100 100;
 	}
 
 	location /video {
@@ -50,8 +51,8 @@ server {
 
 #	location = /upload {
 #		# taken from https://coderwall.com/p/swgfvw/nginx-direct-file-upload-without-passing-them-through-backend
-#		auth_basic			"Robin's upload";
-#		auth_basic_user_file		conf/robin.htpasswd;
+#		auth_basic           "Robin's upload";
+#		auth_basic_user_file conf/robin.htpasswd;
 #		limit_except POST		{ deny all; }
 #
 #		client_body_temp_path		/var/www/robin/files;

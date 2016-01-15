@@ -1,6 +1,6 @@
 #!/bin/sh
 HOST='192.168.122.209'
-BUILD_VERSION='0.0.1'
+BUILD_VERSION=$(cat pom.xml | grep -Po '(?<=<version>)([^<]+)' | head -n 1)
 
 if [ "$1" != 'deploy' ]; then
 	mvn clean install
