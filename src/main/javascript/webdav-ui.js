@@ -113,7 +113,7 @@ var WebDavUploadForm = React.createClass({
 	componentDidMount: function() {
 		this._uploadCount = 0;
 	},
-	cancelUpload: function(upload) {
+	removePendingUpload: function(upload) {
 		var queue = this.state.queue;
 
 		for (var i = 0; i < queue.length; i++) {
@@ -141,7 +141,8 @@ var WebDavUploadForm = React.createClass({
 				name: file.name,
 				size: file.size,
 				id: 'upload-' + this._uploadCount++,
-				progress: 0
+				progress: 0,
+				onProgressChange: function(progress) {}
 			};
 
 			this.state.queue.push(uploadState);
@@ -151,15 +152,15 @@ var WebDavUploadForm = React.createClass({
 				} catch(e) {
 					console.log('Error in upload complete listener: ' + e);
 				}
-				self.cancelUpload(uploadState);
+				self.removePendingUpload(uploadState);
 			};})(this, uploadState),
 			(function(self, uploadState) {return function(e) {
 				uploadState.progress = Math.round(e.loaded / e.total) * 100;
-				self.setState(self.state);
+				console.log('### ' + uploadState.progress);
+				uploadState.onProgressChange(uploadState.progress);
 			};})(this, uploadState),
 			(function(self, uploadState) {return function() {
-				uploadState.progress = 0;
-				self.cancelUpload(uploadState);
+				self.removePendingUpload(uploadState);
 				alert('Failed to upload ' + file.name);
 			};})(this, uploadState));
 		}
@@ -186,16 +187,36 @@ var WebDavUploadForm = React.createClass({
 
 var PendingUploads = React.createClass({
 	render: function() {
-		var pendingUploads = this.props.uploads.map(function(item) {
+		var pendingUploads = this.props.uploads.map((function(self) {return function(item) {
+			item.onProgressChange = function(progress) {
+				self.setState(this);
+			};
 			return <li className="upload-item" key={item.id}>
 				<div>{item.name} ({item.size})</div>
 				<progress max="100" value={item.progress}></progress>
 			</li>;
-		});
+		};})(this));
 
 		return <ul className="uploads-pending">
 			{pendingUploads}
 		</ul>;
+	}
+});
+
+var PendingUploadItem = React.createClass({
+	getInitialState: function() {
+		return this.props.item;
+	},
+	render: function() {
+		var item = this.state;
+		item.onProgressChange = (function(self) {return function(progress) {
+			self.setState(self.state);
+		};})(this)
+		
+		return <li className="upload-item" key={item.id}>
+			<div>{item.name} ({item.size})</div>
+			<progress max="100" value={item.progress}></progress>
+		</li>;
 	}
 });
 
