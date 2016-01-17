@@ -28,7 +28,7 @@ server {
 		create_full_put_path    on;
 	}
 
-       location ~ '/image/(.*?)-(\d+)x(\d+)(\.[^\.]+)$' {
+	location ~ '/image/(.*?)-(\d+)x(\d+)(\.[^\.]+)$' {
 		set $image     $1;
 		set $width     $2;
 		set $height    $3;
@@ -42,11 +42,18 @@ server {
 #		image_filter crop         100 100;
 	}
 
-	location /video {
-		alias /var/www/robin/files;
+	location ~ '/video/(.*?)\.mp4$' {
+		alias /var/www/robin/files/$1.mp4;
 		mp4;
 		mp4_buffer_size       1m;
 		mp4_max_buffer_size   5m;
+		client_max_body_size  80m;
+	}
+
+	location ~ '/video/(.*?)\.flv$' {
+		alias /var/www/robin/files/$1.flv;
+		flv;
+		client_max_body_size  80m;
 	}
 
 #	location = /upload {
