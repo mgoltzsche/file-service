@@ -1,3 +1,4 @@
+var log = require('./logger.js');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var formatSize = require('./format-size.js');
@@ -49,13 +50,13 @@ var UploadForm = React.createClass({
 				try {
 					self.props.onUploadComplete();
 				} catch(e) {
-					console.log('Error in upload complete listener: ' + e);
+					log.error('Error in upload complete listener', e);
 				}
 				self.removePendingUpload(uploadState);
 			};})(this, uploadState),
 			(function(self, upload) {return function(e) {
 				upload.progress = Math.round(e.loaded / e.total) * 100;
-				console.log(upload.id + ' progress:  ' + upload.progress);
+				log.debug(upload.id + ' progress:  ' + upload.progress);
 				upload.onProgressChange(upload.progress);
 			};})(this, uploadState),
 			(function(self, uploadState) {return function() {

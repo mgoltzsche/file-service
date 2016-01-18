@@ -1,3 +1,4 @@
+var log = require('./logger.js');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var Dialog = require('./dialog.js');
@@ -29,6 +30,8 @@ var MediaDisplay = React.createClass({
 	},
 	getInitialState: function() {
 		return {
+			prefWidth: 100,
+			prefHeight: 100,
 			displayType: 'hidden',
 			mediaHref: null,
 			imageHref: '',
@@ -37,7 +40,7 @@ var MediaDisplay = React.createClass({
 		};
 	},
 	componentDidMount: function() {
-		this.refs.dialog.setPreferredSize(100, 100, true);
+//		this.refs.dialog.setPreferredSize(100, 100, true);
 
 		var mediaHref = this.props.mediaHref;
 
@@ -50,7 +53,7 @@ var MediaDisplay = React.createClass({
 	handleMediaError: function(e) {
 		if (this.state.streamHref !== null) {
 			// Fallback to iframe display
-			console.log('Media error for ' + this.state.streamHref + '. Falling back to iframe display');
+			log.debug('Media error for ' + this.state.streamHref + '. Falling back to iframe display');
 			this.state.displayType = 'iframe';
 			this.state.iframeHref = this.state.streamHref;
 			this.state.streamHref = null;
@@ -78,41 +81,45 @@ var MediaDisplay = React.createClass({
 				state.iframeHref = mediaHref;
 			}
 
-			this._clearState(state);
+			this._stopRunningMedia();
 
 			if (displayType === 'video') {
 				this.refs.streamDisplay.load();
 
 				if (this.refs.streamDisplay.error) {
-					console.log('Video element error: ' + this.refs.streamDisplay.error);
+					log.debug('Video element error', this.refs.streamDisplay.error);
 				}
 			}
 
+			this.setState(state);
 			this.refs.dialog.open();
 		}
 	},
 	hide: function() {
+		this._clearState(this.getInitialState());
 		this.refs.dialog.hide();
-		this.refs.dialog.setPreferredSize(100, 100, true);
+//		this.refs.dialog.setPreferredSize(100, 100, true);
 	},
-	_clearState: function(state) {
+	_stopRunningMedia: function() {
 		if (this.state.streamHref !== '') {
 			try {
 				this.refs.streamDisplay.pause();
 			} catch(e) {
-				console.log('Cannot pause video element: ' + e);
+				log.error('Cannot pause video element', e);
 			}
 		}
-
+	},
+	_clearState: function(state) {
+		this._stopRunningMedia();
 		this.setState(state);
 	},
 	setPreferredSize: function(width, height) {
-		this.refs.dialog.setPreferredSize(width, height, true);
+		this.refs.dialog.setPreferredSize(width, height, true); // More lightweight than setState
 	},
 	render: function() {
 		var footer = <a href={this.state.mediaHref} title={this.state.mediaHref}>download</a>;
 
-		return <Dialog className={'media-display media-display-' + this.state.displayType} footer={footer} onClose={this.handleClose} ref="dialog">
+		return <Dialog className={'media-display media-display-' + this.state.displayType} footer={footer} onClose={this.handleClose} prefWidth={this.state.prefWidth} prefHeight={this.state.prefHeight} resizeProportional={true} ref="dialog">
 			<ImageLoader className="image-display" src={this.state.imageHref} onLoad={this.setPreferredSize} />
 			<video className="video-display" width="100%" height="100%" src={this.state.streamHref} controls onError={this.handleMediaError} ref="streamDisplay">
 				<span>Your browser does not support the video element. Go get a new Browser!</span>
@@ -131,53 +138,63 @@ var ImageLoader = React.createClass({
 		};
 	},
 	componentDidMount: function() {
+		this._currentSrc = null;
 		this._preloadElement = document.createElement('img');
 		this._loadListener = function(e) {
-			console.log('image loaded: ' + e.target.src + '  ' + e.target.naturalWidth + 'x' + e.target.naturalHeight);
+			this._removePreloadListeners();
 			this._onImageLoaded(e.target.src, e.target.naturalWidth, e.target.naturalHeight);
-			this.props.onLoad(e.target.naturalWidth, e.target.naturalHeight);
 		}.bind(this);
 		this._errorListener = function(e) {
-			console.log('Error: Failed to load image: ' + e.target.src);
-			this.refs.image.src = this.props.src = 'error.jpg';
+			log.debug('Failed to load image: ' + e.target.src);
+			this._removePreloadListeners();
+			this.refs.image.src = 'error.jpg';
 			this.props.onLoadFailed();
 		}.bind(this);
+		this._removePreloadListeners = function() {
+			this._preloadElement.removeEventListener('load', this._loadListener);
+			this._preloadElement.removeEventListener('error', this._errorListener);
+		}.bind(this);
 
-		this._preloadElement.addEventListener('load', this._loadListener);
-		this._preloadElement.addEventListener('error', this._errorListener);
+		// Load image
+		this._loadImage(this.props.src);
 	},
 	componentWillUnmount: function() {
-		this._preloadElement.removeEventListener('load', this._loadListener);
-		this._preloadElement.removeEventListener('error', this._errorListener);
 	},
 	componentWillUpdate: function(nextProps) {
-		if (!this.loadImage(nextProps.src)) {
-			this.refs.image.src = 'spinner.jpg';
-		}
+		this._loadImage(nextProps.src);
 	},
 	_onImageLoaded: function(href, width, height) {
+		log.debug('Image loaded: ' + href + ' (' + width + 'x' + height + ')');
 		this.refs.image.src = href;
 		this.props.onLoad(width, height);
 	},
-	loadImage: function(src) {
+	_loadImage: function(src) {
 		if (!src) {
-			this.refs.image.src = this.props.src = '';
+			if (!!this._currentSrc)
+				this.refs.image.src = this._currentSrc = this.props.src = '';
 			return;
 		}
 
+		if (this._currentSrc === src) {
+			return; // Avoid onLoad call if image source has not changed
+		}
+
 		var img = this._preloadElement;
-		img.src = src;
+		img.src = this._currentSrc = src;
 
 		if (img.complete) {
+			this.refs.image.src = src;
 			this._onImageLoaded(img.src, img.naturalWidth, img.naturalHeight);
-			return true;
 		} else {
-			return false;
+			this.refs.image.src = 'spinner.jpg';
+			img.addEventListener('load', this._loadListener);
+			img.addEventListener('error', this._errorListener);
 		}
 	},
 	render: function() {
+		log.debug('RENDER IMAGE');
 		return <div className={'image-loader ' + this.props.className}>
-			<img src={this.props.src} ref="image" />
+			<img ref="image" />
 		</div>
 	}
 });

@@ -1,3 +1,5 @@
+var log = require('./logger.js');
+
 function WebDavClient(errorHandler) {
 	this._errorHandler = errorHandler || function(xhr) {alert('WebDAV request failed with HTTP status code ' + xhr.status + '!');};
 }
@@ -62,7 +64,7 @@ WebDavClient.prototype._createRequest = function(method, path, callback, errorCa
 		throw("Browser not supported");
 	}
 
-	console.log('XHR: ' + method + ' ' + path);
+	log.debug('XHR: ' + method + ' ' + path);
 	xhr.open(method, path, true);
 
 	return xhr;

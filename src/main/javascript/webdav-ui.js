@@ -1,3 +1,4 @@
+var log = require('./logger.js');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var WebDavClient = require('./webdav-client.js');
@@ -57,9 +58,9 @@ var WebDavBrowser = React.createClass({
 	},
 	componentDidMount: function() {
 		this._collections = {};
-		this._locationListener = (function(self) {return function(hash) {
-			self.browseCollection(hash);
-		};})(this);
+		this._locationListener = function(hash) {
+			this.browseCollection(hash);
+		}.bind(this);
 		location.addListener(this._locationListener);
 	},
 	componentWillUnmount: function() {
@@ -71,18 +72,18 @@ var WebDavBrowser = React.createClass({
 	},
 	handleItemDelete: function(item) {
 		if (confirm('Do you really want to delete ' + item.href + '?')) {
-			this.props.client.delete(item.href, (function(self) {return function() {
-				self.update();
-			};})(this));
+			this.props.client.delete(item.href, function() {
+				this.update();
+			}.bind(this));
 		}
 	},
 	handleItemMove: function(item) {
 		var destination = prompt('Please type the destination you want the resource ' + item.href + ' to be moved to:', item.href);
 
 		if (destination && item.href !== destination) {
-			this.props.client.move(item.href, destination, (function(self) {return function() {
-				self.update();
-			};})(this));
+			this.props.client.move(item.href, destination, function() {
+				this.update();
+			}.bind(this));
 		}
 	},
 	browseCollection: function(href) {
@@ -148,7 +149,7 @@ var WebDavBrowser = React.createClass({
 			<WebDavBreadcrumbs path={this.state.collectionHref} />
 			<nav className="webdav-action-bar">
 				<ul>
-					<li><a href={'#' + this.state.collectionHref} onClick={this.handleRefresh}>update</a></li>
+					<li><a href={'#' + this.state.collectionHref} onClick={this.handleRefresh}>refresh</a></li>
 				</ul>
 			</nav>
 			<ul className="webdav-collection">

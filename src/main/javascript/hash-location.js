@@ -1,3 +1,5 @@
+var log = require('./logger.js');
+
 var state = {
 	hash: '',
 	listeners: [],
@@ -8,13 +10,13 @@ var state = {
 			hash = hash.substring(1);
 		if (this.hash !== hash) {
 			this.hash = hash;
-			console.log('#' + hash);
+			log.info('#' + hash);
 
 			for (var i = 0; i < this.listeners.length; i++) {
 				try {
 					this.listeners[i](hash);
 				} catch(e) {
-					console.log('Error from location hash listener: ' + e);
+					log.error('Error in location hash listener', e);
 				}
 			}
 

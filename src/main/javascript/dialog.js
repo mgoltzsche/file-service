@@ -1,12 +1,29 @@
+var log = require('./logger.js');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var domready = require("domready");
 
-var addClassName = function(classNames, className) {
-}
-
 var modalOverlay = {
 	hidden: true,
+	clickListeners: [],
+	addClickListener: function(listener) {
+		this.clickListeners.push(listener);
+	},
+	removeClickListener: function(listener) {
+		for (var i = 0; i < this.clickListeners.length; i++) {
+			if (this.clickListeners[i] === listener) {
+				delete this.clickListeners[i];
+				return;
+			}
+		}
+	},
+	onClick: function(e) {
+		e.stopPropagation();
+		var lastClickListener = this.clickListeners.pop();
+
+		if (lastClickListener)
+			lastClickListener();
+	},
 	show: function() {
 		if (this.hidden) {
 			this._element.className = 'dialog-modal-overlay';
@@ -24,99 +41,133 @@ var modalOverlay = {
 var Dialog = React.createClass({
 	getDefaultProps: function() {
 		return {
+			open: false,
 			header: null,
 			footer: null,
-			onClose: function() {},
 			resizeProportional: false,
-			preferredWidth: 0,
-			preferredHeight: 0,
-			minMargin: 10,
-			footerHeight: 30
+			prefWidth: 0,
+			prefHeight: 0,
+			marginX: 10,
+			marginY: 10,
+			onClose: function() {}
 		};
 	},
 	getInitialState: function() {
-		return {hidden: true};
+		return {
+			hidden: true,
+			active: false
+		};
 	},
 	componentDidMount: function() {
+		// Register escape keyup, resize and modal overlay click listeners
 		this._escListener = function(e) {
-			if (!this.state.hidden && e.keyCode === 27) {
+			if (this.state.active && e.keyCode === 27) {
 				this.handleClose(e);
 			}
 		}.bind(this);
 		this._resizeListener = function(e) {
-			this.resize();
+			if (!this.state.hidden)
+				this.resize();
+		}.bind(this);
+		this._modalOverlayClickListener = function() {
+			if (this.state.active)
+				this.hide();
 		}.bind(this);
 
 		document.body.addEventListener('keyup', this._escListener);
 		window.addEventListener('resize', this._resizeListener);
-		
-		this.resizeProportional = this.props.resizeProportional;
-		this.preferredWidth = this.props.preferredWidth;
-		this.preferredHeight = this.props.preferredHeight;
+
+		// Detect outer size of dialog as offset x/y
+		var dialog = this.refs.dialog;
+		var content = this.refs.content;
+		content.style.visibility = 'hidden';
+		content.style.overflow = 'hidden';
+		content.style.width = content.style.minWidth = content.style.maxWidth = '1000px';
+		content.style.height = content.style.minHeight = content.style.maxHeight = '1000px';
+		this._offsetX = dialog.offsetWidth - 1000; // Detect offset x
+		this._offsetY = dialog.offsetHeight - 1000; // Detect offset y
+		content.removeAttribute('style'); // Remove all inline styles
+		log.debug('offsetX: ' + this._offsetX);
+
+		this._prefWidth = this.props.prefWidth;
+		this._prefHeight = this.props.prefHeight;
+		this._resizeProportional = this.props.resizeProportional;
 		this.resize();
 	},
 	componentWillUnmount: function() {
 		document.body.removeEventListener('keyup', this._escListener);
 		window.removeEventListener('resize', this._resizeListener);
+		modalOverlay.removeClickListener(this._modalOverlayClickListener); // In case dialog has not been closed
 	},
-	componentWillUpdate: function(nextProps) {
-		if (nextProps.preferredWidth !== this.props.preferredWidth ||
-				nextProps.preferredHeight !== this.props.preferredHeight ||
+	componentWillUpdate: function(nextProps, nextState) {
+		// Resize dialog if props changed
+		if (nextProps.prefWidth !== this.props.prefWidth ||
+				nextProps.prefHeight !== this.props.prefHeight ||
 				nextProps.resizeProportional !== this.props.resizeProportional) {
-			this.setPreferredSize(nextProps.preferredWidth, nextProps.preferredHeight, nextProps.resizeProportional);
+			this._prefWidth = nextProps.prefWidth;
+			this._prefHeight = nextProps.prefHeight;
+			this._resizeProportional = nextProps.resizeProportional;
+			this.resize();
 		}
+
+		// Open/close dialog if props changed
+		// TODO
 	},
 	handleClose: function(e) {
 		e.preventDefault();
 		this.hide();
 	},
-	avoidClose: function(e) {
-		e.stopPropagation();
-	},
 	open: function() {
 		if (this.state.hidden) {
+			modalOverlay.addClickListener(this._modalOverlayClickListener);
 			modalOverlay.show();
-			this.resize();
-			this.setState({hidden: false});
-			return true;
-		} else {
-			return false;
+			this.setState({hidden: false, active: true});
 		}
 	},
 	hide: function() {
 		if (!this.state.hidden) {
-			this.props.onClose();
-			this.setState({hidden: true});
+			// Set state before listener invocation to guarantee method is not executed reentrant
+			this.state.hidden = true;
+			this.state.active = false;
+
+			try {
+				this.props.onClose();
+			} catch(e) {
+				log.error('Error in dialog close listener', e);
+			}
+
+			this.setState(this.state);
 			modalOverlay.hide();
-			return true;
-		} else {
-			return false;
+			modalOverlay.removeClickListener(this._modalOverlayClickListener);
 		}
 	},
+	/* Method to set preferred size manually without rerendering everything */
 	setPreferredSize: function(width, height, resizeProportional) {
 		var proportionalDefined = typeof resizeProportional !== 'undefined';
 
-		if (this.preferredWidth !== width || this.preferredWidth !== height ||
-				proportionalDefined && this.resizeProportional !== resizeProportional) {
-			this.preferredWidth = width || 0;
-			this.preferredHeight = height || 0;
+		if (this._prefWidth !== width || this._prefWidth !== height ||
+				proportionalDefined && this._resizeProportional !== resizeProportional) {
+			this._prefWidth = width || 0;
+			this._prefHeight = height || 0;
 
 			if (proportionalDefined) {
-				this.resizeProportional = resizeProportional;
+				this._resizeProportional = resizeProportional;
 			}
 
 			this.resize();
 		}
 	},
 	resize: function() {
-		var canvasStyle = this.refs.content.style;
-		var margin = this.props.minMargin * 2;
-		var maxWidth = window.innerWidth - margin;
-		var maxHeight = window.innerHeight - margin - this.props.footerHeight; // TODO: use derived footer height
-		var width = this.preferredWidth;
-		var height = this.preferredHeight;
+		log.debug('Resize dialog: ' + this._prefWidth + 'x' + this._prefHeight);
+		var contentStyle = this.refs.content.style;
+		var vpWidth = window.innerWidth;
+		var vpHeight = window.innerHeight;
+		var maxWidth = vpWidth - this._offsetX - this.props.marginX * 2;
+		var maxHeight = vpHeight - this._offsetY - this.props.marginY * 2;
+		var width = this._prefWidth;
+		var height = this._prefHeight;
+		var proportional = this._resizeProportional;
 		var bothAxisDefined = width > 0 && height > 0;
-		var proportional = this.resizeProportional;
 
 		if (bothAxisDefined && proportional) {
 			var resizeFactor = Math.min(maxWidth / width, maxHeight / height);
@@ -132,47 +183,45 @@ var Dialog = React.createClass({
 				height = Math.floor(height * (maxHeight / height));
 		}
 
-		canvasStyle.maxWidth = maxWidth + 'px';
-		canvasStyle.maxHeight = maxHeight + 'px';
-		canvasStyle.overflow = proportional ? 'hidden' : 'auto';
+		contentStyle.maxWidth = maxWidth + 'px';
+		contentStyle.maxHeight = maxHeight + 'px';
+		contentStyle.overflow = proportional ? 'hidden' : 'auto';
 
 		if (bothAxisDefined) {
-			canvasStyle.width = width + 'px';
-			canvasStyle.height = height + 'px';
+			contentStyle.width = width + 'px';
+			contentStyle.height = height + 'px';
 		} else {
-			canvasStyle.width = width > 0 ? width + 'px' : 'auto';
-			canvasStyle.height = height > 0 ? height + 'px' : 'auto';
+			contentStyle.width = width > 0 ? width + 'px' : 'auto';
+			contentStyle.height = height > 0 ? height + 'px' : 'auto';
 		}
+
+		//var dialog = this.refs.dialog;
+		//var left = Math.floor(vpWidth / 2 - dialog.offsetWidth / 2);
+		//var top = Math.floor(vpHeight / 2 - dialog.offsetHeight / 2);
+		//dialog.style.left = left + 'px';
+		//dialog.style.top = top + 'px';
 	},
 	render: function() {
-		var className = 'dialog ' + this.props.className + (this.state.hidden ? ' hidden' : '');
-
-		return <section className={className}>
-			<div className="media-display-content-table">
-				<div className="media-display-content-cell" onClick={this.handleClose}>
-					<div className="media-display-content-border" onClick={this.avoidClose}>
-						<a className="media-display-close" onClick={this.handleClose}>X</a>
-						<div className="media-display-content">
-							<div className="dialog-header" ref="header">
-								{this.props.header}
-							</div>
-							<div className="media-display-canvas" ref="content">
-								{this.props.children}
-							</div>
-							<div className="media-display-footer" ref="footer">
-								{this.props.footer}
-							</div>
-						</div>
-					</div>
-				</div>
+		log.debug('RENDER DIALOG');
+		return <div className={'dialog ' + this.props.className + (this.state.hidden ? ' hidden' : ' open')} ref="dialog">
+			<div className="dialog-header" ref="header">
+				{this.props.header}
+				<a className="dialog-close" onClick={this.handleClose}>X</a>
 			</div>
-		</section>
+			<div className="dialog-content" ref="content">
+				{this.props.children}
+			</div>
+			<div className="dialog-footer" ref="footer">
+				{this.props.footer}
+			</div>
+		</div>
 	}
 });
 
 domready(function () {
 	modalElement = document.createElement('div');
 	modalElement.className = 'dialog-modal-overlay hidden';
+	modalElement.addEventListener('click', modalOverlay.onClick.bind(modalOverlay));
 	document.body.appendChild(modalElement);
 	modalOverlay._element = modalElement;
 });
