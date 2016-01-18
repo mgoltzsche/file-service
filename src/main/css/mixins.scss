@@ -1,0 +1,16 @@
+@mixin border-radius($radius) {
+	-webkit-border-radius: $radius;
+	   -moz-border-radius: $radius;
+	        border-radius: $radius;
+}
+
+@mixin box-shadow($shadow...) {
+	-webkit-box-shadow: $shadow;
+	   -moz-box-shadow: $shadow;
+	        box-shadow: $shadow;
+}
+
+@mixin opacity($opacity) {
+	opacity: $opacity / 100;
+	//TODO:filter: alpha(opacity=$opacity);
+}

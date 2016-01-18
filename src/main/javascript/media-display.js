@@ -1,5 +1,6 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
+var Dialog = require('./dialog.js');
 
 var MediaDisplay = React.createClass({
 	getDefaultProps: function() {
@@ -23,12 +24,7 @@ var MediaDisplay = React.createClass({
 			rewriteVideoHref: function(href) {
 				return href;
 			},
-			onClose: function() {},
-			resizeProportional: true,
-			preferredWidth: 0,
-			preferredHeight: 0,
-			minMargin: 10,
-			footerHeight: 30
+			onClose: function() {}
 		};
 	},
 	getInitialState: function() {
@@ -41,31 +37,15 @@ var MediaDisplay = React.createClass({
 		};
 	},
 	componentDidMount: function() {
-		this._preferredWidth = this.props.preferredWidth;
-		this._preferredHeight = this.props.preferredHeight;
+		this.refs.dialog.setPreferredSize(100, 100, true);
+
 		var mediaHref = this.props.mediaHref;
 
 		if (typeof mediaHref == 'string' && mediaHref !== '') {
 			this.display(mediaHref);
 		}
-
-		this._escListener = (function(self) {return function(e) {
-			if (self.state.displayType !== 'hidden' && e.keyCode === 27) {
-				self.handleClose(e);
-			}
-		};})(this);
-		this._resizeListener = (function(self) {return function(e) {
-			self.resize();
-		};})(this);
-
-		document.body.addEventListener('keyup', this._escListener);
-		window.addEventListener('resize', this._resizeListener);
-		//this.refs.footer.style.height = this.props.footerHeight + 'px';
-		this.resize();
 	},
 	componentWillUnmount: function() {
-		document.body.removeEventListener('keyup', this._escListener);
-		window.removeEventListener('resize', this._resizeListener);
 	},
 	handleMediaError: function(e) {
 		if (this.state.streamHref !== null) {
@@ -77,14 +57,9 @@ var MediaDisplay = React.createClass({
 			this.setState(this.state);
 		}
 	},
-	handleClose: function(e) {
-		e.preventDefault();
-		if (this.props.onClose(this.state.mediaHref) !== false) {
-			this.hide();
-		}
-	},
-	avoidClose: function(e) {
-		e.stopPropagation();
+	handleClose: function() {
+		this.props.onClose(this.state.mediaHref);
+		this._clearState(this.getInitialState());
 	},
 	display: function(mediaHref) {
 		if (this.state.mediaHref !== mediaHref) {
@@ -104,7 +79,6 @@ var MediaDisplay = React.createClass({
 			}
 
 			this._clearState(state);
-			this.resize();
 
 			if (displayType === 'video') {
 				this.refs.streamDisplay.load();
@@ -113,12 +87,13 @@ var MediaDisplay = React.createClass({
 					console.log('Video element error: ' + this.refs.streamDisplay.error);
 				}
 			}
+
+			this.refs.dialog.open();
 		}
 	},
 	hide: function() {
-		if (this.state.displayType !== 'hidden') {
-			this._clearState(this.getInitialState());
-		}
+		this.refs.dialog.hide();
+		this.refs.dialog.setPreferredSize(100, 100, true);
 	},
 	_clearState: function(state) {
 		if (this.state.streamHref !== '') {
@@ -131,110 +106,77 @@ var MediaDisplay = React.createClass({
 
 		this.setState(state);
 	},
-	setPreferredSize: function(width, height, resizeProportional) {
-		var proportionalDefined = typeof resizeProportional !== 'undefined';
-
-		if (this.props.preferredWith !== width || this.props.preferredHeight !== height ||
-				proportionalDefined && this.props.resizeProportional !== resizeProportional) {
-			this._preferredWidth = width || 0;
-			this._preferredHeight = height || 0;
-
-			if (proportionalDefined) {
-				this.props.resizeProportional = resizeProportional;
-			}
-
-			this.resize();
-		}
-	},
-	resize: function() {
-		var canvasStyle = this.refs.canvas.style;
-		var margin = this.props.minMargin * 2;
-		var maxWidth = window.innerWidth - margin;
-		var maxHeight = window.innerHeight - margin - this.props.footerHeight; // TODO: use derived footer height
-		var width = this._preferredWidth;
-		var height = this._preferredHeight;
-		var bothAxisDefined = width > 0 && height > 0;
-		var proportional = this.props.resizeProportional;
-
-		if (bothAxisDefined && proportional) {
-			var resizeFactor = Math.min(maxWidth / width, maxHeight / height);
-
-			if (resizeFactor < 1) {
-				width = Math.floor(width * resizeFactor);
-				height = Math.ceil(height * resizeFactor);
-			}
-		} else {
-			if (width > maxWidth)
-				width = Math.floor(width * (maxWidth / width));
-			if (height > maxHeight)
-				height = Math.floor(height * (maxHeight / height));
-		}
-
-		canvasStyle.maxWidth = maxWidth + 'px';
-		canvasStyle.maxHeight = maxHeight + 'px';
-		canvasStyle.overflow = proportional ? 'hidden' : 'auto';
-
-		if (bothAxisDefined) {
-			canvasStyle.width = width + 'px';
-			canvasStyle.height = height + 'px';
-		} else {
-			canvasStyle.width = width > 0 ? width + 'px' : 'auto';
-			canvasStyle.height = height > 0 ? height + 'px' : 'auto';
-		}
+	setPreferredSize: function(width, height) {
+		this.refs.dialog.setPreferredSize(width, height, true);
 	},
 	render: function() {
-		return <section className={'media-display media-display-' + this.state.displayType}>
-			<div className="media-display-overlay" onClick={this.handleClose}> </div>
-			<div className="media-display-content-table">
-				<div className="media-display-content-cell" onClick={this.handleClose}>
-					<div className="media-display-content-border" onClick={this.avoidClose}>
-						<a className="media-display-close" onClick={this.handleClose}>X</a>
-						<div className="media-display-content">
-							<div className="media-display-canvas" ref="canvas">
-								<ImageDisplay src={this.state.imageHref} onLoad={this.setPreferredSize} />
-								<video className="video-display" width="100%" height="100%" src={this.state.streamHref} controls onError={this.handleMediaError} ref="streamDisplay">
-									<span>Your browser does not support the video element. Go get a new Browser!</span>
-								</video>
-								<iframe className="iframe-display" src={this.state.iframeHref} />
-							</div>
-							<div className="media-display-footer" ref="footer">
-								<div className="download-display">
-									<a href={this.state.mediaHref} title={this.state.mediaHref}>download</a>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</section>
+		var footer = <a href={this.state.mediaHref} title={this.state.mediaHref}>download</a>;
+
+		return <Dialog className={'media-display media-display-' + this.state.displayType} footer={footer} onClose={this.handleClose} ref="dialog">
+			<ImageLoader className="image-display" src={this.state.imageHref} onLoad={this.setPreferredSize} />
+			<video className="video-display" width="100%" height="100%" src={this.state.streamHref} controls onError={this.handleMediaError} ref="streamDisplay">
+				<span>Your browser does not support the video element. Go get a new Browser!</span>
+			</video>
+			<iframe className="iframe-display" src={this.state.iframeHref} />
+		</Dialog>
 	}
 });
 
-var ImageDisplay = React.createClass({
+var ImageLoader = React.createClass({
 	getDefaultProps: function() {
 		return {
 			src: '',
-			onLoad: function(width, height) {}
+			onLoad: function(width, height) {},
+			onLoadFailed: function() {}
 		};
 	},
 	componentDidMount: function() {
+		this._preloadElement = document.createElement('img');
 		this._loadListener = function(e) {
 			console.log('image loaded: ' + e.target.src + '  ' + e.target.naturalWidth + 'x' + e.target.naturalHeight);
+			this._onImageLoaded(e.target.src, e.target.naturalWidth, e.target.naturalHeight);
 			this.props.onLoad(e.target.naturalWidth, e.target.naturalHeight);
 		}.bind(this);
 		this._errorListener = function(e) {
 			console.log('Error: Failed to load image: ' + e.target.src);
+			this.refs.image.src = this.props.src = 'error.jpg';
+			this.props.onLoadFailed();
 		}.bind(this);
 
-		this.refs.image.addEventListener('load', this._loadListener);
-		this.refs.image.addEventListener('error', this._errorListener);
+		this._preloadElement.addEventListener('load', this._loadListener);
+		this._preloadElement.addEventListener('error', this._errorListener);
 	},
 	componentWillUnmount: function() {
-		this.refs.image.removeEventListener('load', this._loadListener);
-		this.refs.image.removeEventListener('error', this._errorListener);
+		this._preloadElement.removeEventListener('load', this._loadListener);
+		this._preloadElement.removeEventListener('error', this._errorListener);
+	},
+	componentWillUpdate: function(nextProps) {
+		if (!this.loadImage(nextProps.src)) {
+			this.refs.image.src = 'spinner.jpg';
+		}
+	},
+	_onImageLoaded: function(href, width, height) {
+		this.refs.image.src = href;
+		this.props.onLoad(width, height);
+	},
+	loadImage: function(src) {
+		if (!src) {
+			this.refs.image.src = this.props.src = '';
+			return;
+		}
+
+		var img = this._preloadElement;
+		img.src = src;
+
+		if (img.complete) {
+			this._onImageLoaded(img.src, img.naturalWidth, img.naturalHeight);
+			return true;
+		} else {
+			return false;
+		}
 	},
 	render: function() {
-		return <div className="image-display">
+		return <div className={'image-loader ' + this.props.className}>
 			<img src={this.props.src} ref="image" />
 		</div>
 	}

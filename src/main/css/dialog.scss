@@ -1,0 +1,86 @@
+.dialog, .dialog-modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+.dialog-modal-overlay {
+	z-index: 900;
+	background: #000000;
+	@include opacity(50);
+
+	&.hidden {
+		display: none;
+	}
+}
+
+.dialog {
+	z-index: 999;
+
+	&.hidden {
+		display: none;
+	}
+
+	&.media-display-hidden { /* hidden state */
+		display: none
+	}
+
+	.media-display-content-table {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 100%;
+		height: 100%;
+		display: table;
+
+		.media-display-content-cell {
+			display: table-cell;
+			vertical-align: middle;
+			text-align: center;
+
+			.media-display-content-border {
+				display: inline-block;
+				background: $backgroundColor;
+				border: 1px solid $borderColor;
+				@include box-shadow(3px 5px 20px rgba(0,0,0,.5));
+			}
+		}
+	}
+
+	.media-display-content {
+		display: inline-block;
+		overflow: hidden;
+
+		.media-display-canvas {
+			display: inline-block;
+			overflow: hidden;
+			max-width: 100%;
+			max-height: 100%;
+			
+			img {
+				max-width: 100%;
+				max-height: 100%;
+			}
+		}
+		.media-display-footer {
+			text-align: center;
+		}
+	}
+
+	.media-display-close {
+		display: inline-block;
+		position: relative;
+		top: -0.6em;
+		right: -0.6em;
+		float: right;
+		width: 1.2em;
+		height: 1.2em;
+		margin: 0 0 -1.2em -1.2em;
+		cursor: pointer;
+		background: $backgroundColor;
+		border: 1px solid $borderColor;
+		@include box-shadow(0.6em);
+	}
+}

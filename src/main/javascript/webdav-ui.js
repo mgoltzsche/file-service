@@ -21,7 +21,7 @@ var collectionHref = function(docHref) {
 var WebDavUI = React.createClass({
 	getDefaultProps: function() {
 		return {
-			rootURL: '/files',
+			rootURL: '/',
 			client: new WebDavClient()
 		};
 	},
