@@ -21,6 +21,7 @@ var filterFileHrefs = function(items) {
 };
 
 var WebDavUI = React.createClass({
+	_imageHrefPattern: /^\/files\/(.*?)\.(jpg|jpeg|png|gif)$/i,
 	getDefaultProps: function() {
 		return {
 			rootURL: '/',
@@ -31,6 +32,9 @@ var WebDavUI = React.createClass({
 		return {
 			mediaHref: ''
 		}
+	},
+	getScaledImageHref: function(href, width, height) {
+		return href.replace(this._imageHrefPattern, '/image/$1-' + width + 'x' + height + '.$2');
 	},
 	handleFileSelect: function(href) {
 		this.setState({
@@ -53,10 +57,31 @@ var WebDavUI = React.createClass({
 		//this.state = filterFileHrefs(items);
 		// TODO: set new state with file refs only 
 	},
+	getIconHref: function(item) {
+		if (item.resourcetype === 'collection')
+			return ''; // TODO: return collection icon href
+
+		if (this._imageHrefPattern.test(item.href))
+			return this.getScaledImageHref(item.href, 27, 23);
+
+		return '';
+	},
+	rewriteImageHref: function(href, maxWidth, maxHeight) {
+		// TODO: Limit possible image resolutions
+		return this.getScaledImageHref(href, maxWidth, maxHeight);
+	},
 	render: function() {
 		return <div>
-			<MediaDisplay onClose={this.handleMediaDisplayClose} mediaHref={this.state.mediaHref} ref="mediaDisplay" />
-			<WebDavBrowser rootURL={this.props.rootURL} client={this.props.client} onSelectFile={this.handleFileSelect} onSelectCollection={this.handleCollectionSelect} onCollectionLoaded={this.handleCollectionLoaded} />
+			<MediaDisplay mediaHref={this.state.mediaHref}
+				rewriteImageHref={this.rewriteImageHref}
+				onClose={this.handleMediaDisplayClose}
+				ref="mediaDisplay" />
+			<WebDavBrowser rootURL={this.props.rootURL}
+				client={this.props.client}
+				onSelectFile={this.handleFileSelect}
+				onSelectCollection={this.handleCollectionSelect}
+				onCollectionLoaded={this.handleCollectionLoaded}
+				getIconHref={this.getIconHref} />
 		</div>
 	}
 });

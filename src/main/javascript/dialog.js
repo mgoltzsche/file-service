@@ -149,6 +149,7 @@ var Dialog = React.createClass({
 			this._show = true;
 			modalOverlay.addClickListener(this._modalOverlayClickListener);
 			modalOverlay.show();
+//			this.setPreferredSize(this.props.prefWidth, this.props.prefHeight, this.props.resizeProportional);
 			this.updateClassName();
 			return true;
 		}

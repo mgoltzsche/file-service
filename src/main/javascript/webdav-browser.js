@@ -17,6 +17,7 @@ var WebDavBrowser = React.createClass({
 	getDefaultProps: function() {
 		return {
 			client: new WebDavClient(),
+			getIconHref: function(item) {return '';},
 			onSelectFile: function(href) {},
 			onSelectCollection: function(href) {},
 			onCollectionLoaded: function(collection) {}
@@ -114,7 +115,7 @@ var WebDavBrowser = React.createClass({
 	render: function() {
 		var baseURL = this.state.collectionHref + '/';
 		var collectionItems = this.state.items.map(function(item) {
-			return <WebDavItem item={item} onDelete={this.handleItemDelete} onMove={this.handleItemMove} key={item.href} />;
+			return <WebDavItem item={item} getIconHref={this.props.getIconHref} onDelete={this.handleItemDelete} onMove={this.handleItemMove} key={item.href} />;
 		}.bind(this));
 		return <section className="webdav-browser">
 			<WebDavBreadcrumbs path={this.state.collectionHref} />
@@ -135,6 +136,7 @@ var WebDavBrowser = React.createClass({
 var WebDavItem = React.createClass({
 	getDefaultProps: function() {
 		return {
+			getIconHref: function(item) {return '';},
 			onDelete: function(href) {},
 			onMove: function(href) {}
 		};
@@ -164,7 +166,7 @@ var WebDavItem = React.createClass({
 		}
 
 		return <li className="webdav-item">
-			<img src={item.href} alt="" width="27" height="23" />
+			<img src={this.props.getIconHref(item)} alt="" width="27" height="23" />
 			<a href={'#' + item.href} title={title} onClick={this.handleClick} className="webdav-item-label">{item.name}</a> 
 			<span className="webdav-item-action-bar">
 				<a href="javascript://move" onClick={this.handleMove}>move</a> 

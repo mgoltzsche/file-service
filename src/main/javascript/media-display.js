@@ -14,7 +14,6 @@ var MediaDisplay = React.createClass({
 				'jpeg': 'image',
 				'png': 'image',
 				'gif': 'image',
-				'bmp': 'image',
 				'mp4': 'stream',
 				'mp3': 'stream',
 				'txt': 'iframe',
@@ -138,8 +137,8 @@ var MediaDisplay = React.createClass({
 			log.debug('Display ' + display.name + ' ' + mediaHref);
 			this.state.mediaHref = mediaHref;
 			this.state.display.clear(this);
-			display.show(this, mediaHref);
 			this.state.display = display;
+			this.state.display.show(this, mediaHref);
 			this.refs.label.href = mediaHref;
 			this.refs.label.title = mediaHref;
 			this.refs.label.innerHTML = decodeURIComponent(mediaHref.split('/').pop());
