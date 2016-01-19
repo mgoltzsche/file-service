@@ -1,11 +1,13 @@
-var log = require('./logger.js');
+var log = require('./logger.js')('MediaDisplay');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var Dialog = require('./dialog.js');
+var ImageLoader = require('./image-loader.js');
 
 var MediaDisplay = React.createClass({
 	getDefaultProps: function() {
 		return {
+			className: '',
 			mediaHref: null,
 			displayTypes: {
 				'jpg': 'image',
@@ -13,8 +15,8 @@ var MediaDisplay = React.createClass({
 				'png': 'image',
 				'gif': 'image',
 				'bmp': 'image',
-				'mp4': 'video',
-				'mp3': 'audio',
+				'mp4': 'stream',
+				'mp3': 'stream',
 				'txt': 'iframe',
 				'html': 'iframe',
 				'xhtml': 'iframe'
@@ -22,7 +24,7 @@ var MediaDisplay = React.createClass({
 			rewriteImageHref: function(href, width, height) {
 				return href;
 			},
-			rewriteVideoHref: function(href) {
+			rewriteStreamHref: function(href) {
 				return href;
 			},
 			onClose: function() {}
@@ -32,16 +34,11 @@ var MediaDisplay = React.createClass({
 		return {
 			prefWidth: 100,
 			prefHeight: 100,
-			displayType: 'hidden',
-			mediaHref: null,
-			imageHref: '',
-			streamHref: null,
-			iframeHref: '',
+			mediaHref: '',
+			display: this.displays.hidden
 		};
 	},
 	componentDidMount: function() {
-//		this.refs.dialog.setPreferredSize(100, 100, true);
-
 		var mediaHref = this.props.mediaHref;
 
 		if (typeof mediaHref == 'string' && mediaHref !== '') {
@@ -50,152 +47,139 @@ var MediaDisplay = React.createClass({
 	},
 	componentWillUnmount: function() {
 	},
+	componentWillUpdate: function(nextProps, nextState) {
+		if (nextProps.mediaHref !== this.props.mediaHref) {
+			if (nextProps.mediaHref) {
+				this.display(nextProps.mediaHref);
+			} else {
+				this.hide();
+			}
+		}
+	},
 	handleMediaError: function(e) {
 		if (this.state.streamHref !== null) {
-			// Fallback to iframe display
-			log.debug('Media error for ' + this.state.streamHref + '. Falling back to iframe display');
+			// TODO: Fallback to iframe display
+			/*log.debug('Media error for ' + this.state.streamHref + '. Falling back to iframe display');
 			this.state.displayType = 'iframe';
 			this.state.iframeHref = this.state.streamHref;
 			this.state.streamHref = null;
-			this.setState(this.state);
+			this.setState(this.state);*/
 		}
 	},
 	handleClose: function() {
 		this.props.onClose(this.state.mediaHref);
-		this._clearState(this.getInitialState());
+	},
+	displays: {
+		image: {
+			name: 'image',
+			show: function(self, href) {
+				var maxWidth = self.refs.dialog.getMaxContentWidth();
+				var maxHeight = self.refs.dialog.getMaxContentHeight();
+				href = self.props.rewriteImageHref(href, maxWidth, maxHeight);
+				self.refs.image.showImage(href);
+			},
+			clear: function(self) {
+				self.refs.image.showImage();
+			}
+		},
+		stream: {
+			name: 'stream',
+			show: function(self, href) {
+				self.refs.stream.src = self.props.rewriteStreamHref(href);
+				self.refs.stream.load();
+
+				if (self.refs.stream.error) {
+					log.debug('Video element error', self.refs.stream.error);
+				}
+
+				self.setPreferredSize(720, 480);
+			},
+			clear: function(self) {
+				try {
+					self.refs.stream.pause();
+				} catch(e) {
+					log.error('Cannot pause video element', e);
+				}
+			}
+		},
+		iframe: {
+			name: 'iframe',
+			show: function(self, href) {
+				self.refs.iframe.src = href;
+				self.refs.dialog.setPreferredSize(1000, 1000, false);
+			},
+			clear: function(self) {
+				self.refs.iframe.src = '';
+			}
+		},
+		download: {
+			name: 'download',
+			show: function(self, href) {
+				self.refs.download.href = href;
+				self.setPreferredSize(320, 240);
+			},
+			clear: function() {}
+		},
+		hidden: {
+			name: 'hidden',
+			show: function() {},
+			clear: function() {}
+		}
 	},
 	display: function(mediaHref) {
 		if (this.state.mediaHref !== mediaHref) {
-			var state = this.getInitialState();
-			var displayType = state.displayType = this.props.displayTypes[mediaHref.split('.').pop().toLowerCase()] || 'unsupported';
+			var extension = mediaHref.split('.').pop().toLowerCase();
+			var displayType = this.props.displayTypes[extension] || 'download';
+			var display = this.displays[displayType];
 
-			state.mediaHref = mediaHref;
+			if (!display)
+				throw 'Unsupported media display type: ' + displayType;
 
-			if (displayType === 'image') {
-				state.imageHref = this.props.rewriteImageHref(mediaHref);
-			} else if (displayType === 'video') {
-				state.streamHref = this.props.rewriteVideoHref(mediaHref);
-			} else if (displayType === 'audio') {
-				state.streamHref = mediaHref;
-			} else if (displayType === 'iframe') {
-				state.iframeHref = mediaHref;
-			}
+			log.debug('Display ' + display.name + ' ' + mediaHref);
+			this.state.mediaHref = mediaHref;
+			this.state.display.clear(this);
+			display.show(this, mediaHref);
+			this.state.display = display;
+			this.refs.label.href = mediaHref;
+			this.refs.label.title = mediaHref;
+			this.refs.label.innerHTML = decodeURIComponent(mediaHref.split('/').pop());
+			this.refs.container.className = this.getClassName();
+			this.refs.dialog.show();
 
-			this._stopRunningMedia();
-
-			if (displayType === 'video') {
-				this.refs.streamDisplay.load();
-
-				if (this.refs.streamDisplay.error) {
-					log.debug('Video element error', this.refs.streamDisplay.error);
-				}
-			}
-
-			this.setState(state);
-			this.refs.dialog.open();
+//			this.setState(this.state);
+		} else {
+			log.debug('Display ' + this.state.display.name + ' ' + mediaHref);
+			this.state.display.show(this, mediaHref);
+			this.refs.dialog.show()
 		}
 	},
 	hide: function() {
-		this._clearState(this.getInitialState());
-		this.refs.dialog.hide();
-//		this.refs.dialog.setPreferredSize(100, 100, true);
-	},
-	_stopRunningMedia: function() {
-		if (this.state.streamHref !== '') {
-			try {
-				this.refs.streamDisplay.pause();
-			} catch(e) {
-				log.error('Cannot pause video element', e);
-			}
+		if (this.state.display !== this.displays.hidden) {
+			this.state.display.clear(this);
+			this.refs.dialog.hide();
 		}
-	},
-	_clearState: function(state) {
-		this._stopRunningMedia();
-		this.setState(state);
 	},
 	setPreferredSize: function(width, height) {
-		this.refs.dialog.setPreferredSize(width, height, true); // More lightweight than setState
+		this.refs.dialog.setPreferredSize(width, height, true); // Cheaper than setState
+	},
+	getClassName: function() {
+		return 'media-display-' + this.state.display.name + ' ' + this.props.className;
 	},
 	render: function() {
-		var footer = <a href={this.state.mediaHref} title={this.state.mediaHref}>download</a>;
+		log.debug('RENDER MEDIA DISPLAY');
+		var mediaName = decodeURIComponent(this.state.mediaHref.split('/').pop());
+		var footer = <a ref="label">{mediaName}</a>;
 
-		return <Dialog className={'media-display media-display-' + this.state.displayType} footer={footer} onClose={this.handleClose} prefWidth={this.state.prefWidth} prefHeight={this.state.prefHeight} resizeProportional={true} ref="dialog">
-			<ImageLoader className="image-display" src={this.state.imageHref} onLoad={this.setPreferredSize} />
-			<video className="video-display" width="100%" height="100%" src={this.state.streamHref} controls onError={this.handleMediaError} ref="streamDisplay">
-				<span>Your browser does not support the video element. Go get a new Browser!</span>
-			</video>
-			<iframe className="iframe-display" src={this.state.iframeHref} />
+		return <Dialog className={'media-display' + (this.props.className ? ' ' + this.props.className : '')} footer={footer} onClose={this.handleClose} prefWidth={this.state.prefWidth} prefHeight={this.state.prefHeight} resizeProportional={true} ref="dialog">
+			<div className={this.getClassName()} ref="container">
+				<ImageLoader className="image-display" onLoad={this.setPreferredSize} ref="image" />
+				<video className="stream-display" width="100%" height="100%" controls onError={this.handleMediaError} ref="stream">
+					<span>Your browser does not support the video element. Go get a new Browser!</span>
+				</video>
+				<iframe className="iframe-display" width="100%" height="100%" ref="iframe" />
+				<a className="download-display" title="Download" ref="download">Download</a>
+			</div>
 		</Dialog>
-	}
-});
-
-var ImageLoader = React.createClass({
-	getDefaultProps: function() {
-		return {
-			src: '',
-			onLoad: function(width, height) {},
-			onLoadFailed: function() {}
-		};
-	},
-	componentDidMount: function() {
-		this._currentSrc = null;
-		this._preloadElement = document.createElement('img');
-		this._loadListener = function(e) {
-			this._removePreloadListeners();
-			this._onImageLoaded(e.target.src, e.target.naturalWidth, e.target.naturalHeight);
-		}.bind(this);
-		this._errorListener = function(e) {
-			log.debug('Failed to load image: ' + e.target.src);
-			this._removePreloadListeners();
-			this.refs.image.src = 'error.jpg';
-			this.props.onLoadFailed();
-		}.bind(this);
-		this._removePreloadListeners = function() {
-			this._preloadElement.removeEventListener('load', this._loadListener);
-			this._preloadElement.removeEventListener('error', this._errorListener);
-		}.bind(this);
-
-		// Load image
-		this._loadImage(this.props.src);
-	},
-	componentWillUnmount: function() {
-	},
-	componentWillUpdate: function(nextProps) {
-		this._loadImage(nextProps.src);
-	},
-	_onImageLoaded: function(href, width, height) {
-		log.debug('Image loaded: ' + href + ' (' + width + 'x' + height + ')');
-		this.refs.image.src = href;
-		this.props.onLoad(width, height);
-	},
-	_loadImage: function(src) {
-		if (!src) {
-			if (!!this._currentSrc)
-				this.refs.image.src = this._currentSrc = this.props.src = '';
-			return;
-		}
-
-		if (this._currentSrc === src) {
-			return; // Avoid onLoad call if image source has not changed
-		}
-
-		var img = this._preloadElement;
-		img.src = this._currentSrc = src;
-
-		if (img.complete) {
-			this.refs.image.src = src;
-			this._onImageLoaded(img.src, img.naturalWidth, img.naturalHeight);
-		} else {
-			this.refs.image.src = 'spinner.jpg';
-			img.addEventListener('load', this._loadListener);
-			img.addEventListener('error', this._errorListener);
-		}
-	},
-	render: function() {
-		log.debug('RENDER IMAGE');
-		return <div className={'image-loader ' + this.props.className}>
-			<img ref="image" />
-		</div>
 	}
 });
 

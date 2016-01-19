@@ -1,3 +1,4 @@
+var log = require('./logger.js')('main');
 var WebDavUI = require('./webdav-ui.js');
 var domready = require("domready");
 
@@ -9,7 +10,7 @@ domready(function () {
 	try {
 		WebDavUI(document.getElementById('webdav-ui'), '/files');
 	} catch(e) {
-		console.log(e);
+		log.error('Initialization failed', e);
 		alert("D'oh! " + e);
 	}
 });

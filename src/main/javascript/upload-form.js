@@ -1,4 +1,4 @@
-var log = require('./logger.js');
+var log = require('./logger.js')('UploadForm');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var formatSize = require('./format-size.js');

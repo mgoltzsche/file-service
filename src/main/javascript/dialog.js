@@ -1,7 +1,21 @@
-var log = require('./logger.js');
+var log = require('./logger.js')('Dialog');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var domready = require("domready");
+
+var addClassName = function(classNames, className) {
+	return removeClassName(classNames, className) + ' ' + className;
+};
+var removeClassName = function(classNames, className) {
+	var classNamesSplit = classNames.split(' ');
+	var newClassNames = [];
+
+	for (var i = 0; i < classNamesSplit.length; i++)
+		if (name !== '' && name !== className)
+			newClassNames.push(name);
+
+	return newClassNames.join(' ');
+};
 
 var modalOverlay = {
 	hidden: true,
@@ -41,37 +55,31 @@ var modalOverlay = {
 var Dialog = React.createClass({
 	getDefaultProps: function() {
 		return {
-			open: false,
+			show: false,
 			header: null,
 			footer: null,
 			resizeProportional: false,
 			prefWidth: 0,
 			prefHeight: 0,
-			marginX: 10,
-			marginY: 10,
+			marginX: 20,
+			marginY: 20,
+			onResize: function() {},
 			onClose: function() {}
-		};
-	},
-	getInitialState: function() {
-		return {
-			hidden: true,
-			active: false
 		};
 	},
 	componentDidMount: function() {
 		// Register escape keyup, resize and modal overlay click listeners
 		this._escListener = function(e) {
-			if (this.state.active && e.keyCode === 27) {
+			if (this._show && e.keyCode === 27) {
 				this.handleClose(e);
 			}
 		}.bind(this);
 		this._resizeListener = function(e) {
-			if (!this.state.hidden)
+			if (this._show)
 				this.resize();
 		}.bind(this);
 		this._modalOverlayClickListener = function() {
-			if (this.state.active)
-				this.hide();
+			this.hide();
 		}.bind(this);
 
 		document.body.addEventListener('keyup', this._escListener);
@@ -82,17 +90,33 @@ var Dialog = React.createClass({
 		var content = this.refs.content;
 		content.style.visibility = 'hidden';
 		content.style.overflow = 'hidden';
-		content.style.width = content.style.minWidth = content.style.maxWidth = '1000px';
-		content.style.height = content.style.minHeight = content.style.maxHeight = '1000px';
+		content.style.display = 'block';
+		dialog.style.display = 'block';
+		var testSize = '1000px';
+		content.style.width = testSize;
+		content.style.height = testSize;
+		content.style.minWidth = testSize;
+		content.style.minHeight = testSize;
+		content.style.maxWidth = testSize;
+		content.style.maxHeight = testSize;
 		this._offsetX = dialog.offsetWidth - 1000; // Detect offset x
 		this._offsetY = dialog.offsetHeight - 1000; // Detect offset y
-		content.removeAttribute('style'); // Remove all inline styles
-		log.debug('offsetX: ' + this._offsetX);
+		content.removeAttribute('style'); // Remove all inline styles used to detect offset
+		dialog.removeAttribute('style');
+		log.debug('Detected offset: x: ' + this._offsetX + ', y: ' + this._offsetY);
 
 		this._prefWidth = this.props.prefWidth;
 		this._prefHeight = this.props.prefHeight;
 		this._resizeProportional = this.props.resizeProportional;
 		this.resize();
+
+		if (this.props.show) {
+			this._show = false;
+			this.show();
+		} else {
+			this._show = false;
+			this.updateClassName();
+		}
 	},
 	componentWillUnmount: function() {
 		document.body.removeEventListener('keyup', this._escListener);
@@ -111,24 +135,31 @@ var Dialog = React.createClass({
 		}
 
 		// Open/close dialog if props changed
-		// TODO
+		if (nextProps.show !== this.props.show) {
+			(nextProps.show ? this.show : this.hide)();
+		}
 	},
 	handleClose: function(e) {
 		e.preventDefault();
 		this.hide();
 	},
-	open: function() {
-		if (this.state.hidden) {
+	show: function() {
+		if (!this._show) {
+			log.debug('Dialog.show');
+			this._show = true;
 			modalOverlay.addClickListener(this._modalOverlayClickListener);
 			modalOverlay.show();
-			this.setState({hidden: false, active: true});
+			this.updateClassName();
+			return true;
 		}
+		
+		return false;
 	},
 	hide: function() {
-		if (!this.state.hidden) {
+		if (this._show) {
+			log.debug('Dialog.hide');
 			// Set state before listener invocation to guarantee method is not executed reentrant
-			this.state.hidden = true;
-			this.state.active = false;
+			this._show = false;
 
 			try {
 				this.props.onClose();
@@ -136,10 +167,13 @@ var Dialog = React.createClass({
 				log.error('Error in dialog close listener', e);
 			}
 
-			this.setState(this.state);
 			modalOverlay.hide();
 			modalOverlay.removeClickListener(this._modalOverlayClickListener);
+			this.updateClassName();
+			return true;
 		}
+		
+		return false;
 	},
 	/* Method to set preferred size manually without rerendering everything */
 	setPreferredSize: function(width, height, resizeProportional) {
@@ -200,10 +234,32 @@ var Dialog = React.createClass({
 		//var top = Math.floor(vpHeight / 2 - dialog.offsetHeight / 2);
 		//dialog.style.left = left + 'px';
 		//dialog.style.top = top + 'px';
+
+		this._maxContentWidth = maxWidth;
+		this._maxContentHeight = maxHeight;
+		this.props.onResize();
+	},
+	getMaxContentWidth: function() {
+		return this._maxContentWidth;
+	},
+	getMaxContentHeight: function() {
+		return this._maxContentHeight;
+	},
+	getClassName: function() {
+		var className = 'dialog';
+
+		if (typeof this.props.className === 'string') {
+			className += ' ' + this.props.className;
+		}
+
+		return className + (this._show ? ' open' : ' hidden');
+	},
+	updateClassName: function() {
+		this.refs.dialog.className = this.getClassName();
 	},
 	render: function() {
 		log.debug('RENDER DIALOG');
-		return <div className={'dialog ' + this.props.className + (this.state.hidden ? ' hidden' : ' open')} ref="dialog">
+		return <div className={this.getClassName()} ref="dialog">
 			<div className="dialog-header" ref="header">
 				{this.props.header}
 				<a className="dialog-close" onClick={this.handleClose}>X</a>

@@ -1,4 +1,4 @@
-var log = require('./logger.js');
+var log = require('./logger.js')('HashLocation');
 
 var state = {
 	hash: '',

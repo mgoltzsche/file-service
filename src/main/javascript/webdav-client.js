@@ -1,4 +1,4 @@
-var log = require('./logger.js');
+var log = require('./logger.js')('WebDavClient');
 
 function WebDavClient(errorHandler) {
 	this._errorHandler = errorHandler || function(xhr) {alert('WebDAV request failed with HTTP status code ' + xhr.status + '!');};
