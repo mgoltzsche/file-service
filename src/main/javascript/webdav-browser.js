@@ -116,7 +116,7 @@ var WebDavBrowser = React.createClass({
 		var collectionItems = this.state.items.map(function(item) {
 			return <WebDavItem item={item} onDelete={this.handleItemDelete} onMove={this.handleItemMove} key={item.href} />;
 		}.bind(this));
-		return <section>
+		return <section className="webdav-browser">
 			<WebDavBreadcrumbs path={this.state.collectionHref} />
 			<nav className="webdav-action-bar">
 				<ul>
@@ -165,7 +165,7 @@ var WebDavItem = React.createClass({
 
 		return <li className="webdav-item">
 			<img src={item.href} alt="" width="27" height="23" />
-			<a href={'#' + item.href} title={title} onClick={this.handleClick}>{item.name}</a> 
+			<a href={'#' + item.href} title={title} onClick={this.handleClick} className="webdav-item-label">{item.name}</a> 
 			<span className="webdav-item-action-bar">
 				<a href="javascript://move" onClick={this.handleMove}>move</a> 
 				<a href="javascript://delete" onClick={this.handleDelete}>delete</a>

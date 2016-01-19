@@ -1,12 +1,22 @@
 $borderColor: #777777;
 $backgroundColor: #ffffff;
+$actionColor: #114477;
 
 @import "mixins.scss";
 @import "dialog.scss";
+@import "webdav-browser.scss";
 
+html {
+    height: 100%;
+}
 body {
-	margin: 0;
-	padding: 0;
+    height: 100%;
+    margin: 0;
+}
+
+a {
+	text-decoration: none;
+	color: $actionColor;
 }
 
 .media-display {

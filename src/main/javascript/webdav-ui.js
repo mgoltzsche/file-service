@@ -50,7 +50,7 @@ var WebDavUI = React.createClass({
 		location.hash(href.split('/').slice(0, -1).join('/'));
 	},
 	handleCollectionLoaded: function(items) {
-		this.state = filterFileHrefs(items);
+		//this.state = filterFileHrefs(items);
 		// TODO: set new state with file refs only 
 	},
 	render: function() {

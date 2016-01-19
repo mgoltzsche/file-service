@@ -6,7 +6,10 @@
 	right: 0;
 	bottom: 0;
 	background: #000000;
-	@include opacity(50);
+	background-repeat: no-repeat;
+    background-attachment: fixed;
+    @include gradient-radial(#eeeeee, #000000);
+    @include opacity(50);
 
 	&.hidden {
 		display: none;
