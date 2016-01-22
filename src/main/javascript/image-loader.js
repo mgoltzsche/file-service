@@ -38,18 +38,18 @@ var ImageLoader = React.createClass({
 			this.showImage(nextProps.src);
 	},
 	_onImageLoaded: function(href, width, height) {
-		log.debug('Image loaded: ' + href + ' (' + width + 'x' + height + ')');
+		log.debug('loaded: ' + href + ' (' + width + 'x' + height + ')');
 		this.refs.image.src = href;
 		this.props.onLoad(width, height);
 	},
 	showImage: function(src) {
-		log.debug('showImage: ' + src);
 		if (!src) {
 			if (!!this._currentSrc)
 				this.refs.image.src = this._currentSrc = '';
 			return;
 		}
 
+		log.debug('loading: ' + src);
 		var img = this._preloadElement;
 		img.src = this._currentSrc = src;
 

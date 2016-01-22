@@ -6,20 +6,6 @@ var WebDavBrowser = require('./webdav-browser.js');
 var location = require('./hash-location.js');
 var MediaDisplay = require('./media-display.js');
 
-var filterFileHrefs = function(items) {
-	var hrefs = [];
-
-	for (var i = 0; i < items.length; i++) {
-		var item = items[i];
-
-		if (item.resourcetype !== 'collection') {
-			href.push(item.href);
-		}
-	}
-
-	return hrefs;
-};
-
 var WebDavUI = React.createClass({
 	_imageHrefPattern: /^\/files\/(.*?)\.(jpg|jpeg|png|gif)$/i,
 	getDefaultProps: function() {
@@ -30,32 +16,59 @@ var WebDavUI = React.createClass({
 	},
 	getInitialState: function() {
 		return {
-			mediaHref: ''
+			media: []
 		}
 	},
 	getScaledImageHref: function(href, width, height) {
 		return href.replace(this._imageHrefPattern, '/image/$1-' + width + 'x' + height + '.$2');
 	},
+	toMediaDisplayModel: function(webdavItems) {
+		var media = [];
+
+		for (var i = 0; i < webdavItems.length; i++) {
+			var item = webdavItems[i];
+
+			if (item.resourcetype !== 'collection') {
+				var href = item.href;
+
+				media.push(this.toMediaDisplayModelItem(item.href));
+			}
+		}
+
+		return media;
+	},
+	toMediaDisplayModelItem: function(href) {
+		return {
+			href: href,
+			label: decodeURIComponent(href.split('/').pop())
+		};
+	},
+	getMediaIndexOr0: function(href) {
+		var media = this.state.media;
+
+		for (var i = 0; i < media.length; i++) {
+			if (media[i].href === href)
+				return i;
+		}
+
+		return 0;
+	},
 	handleFileSelect: function(href) {
-		this.setState({
-			mediaHref: href
-		});
-		//this.refs.mediaDisplay.display(href);
+		if (this.state.media.length === 0)
+			this.state.media = [this.toMediaDisplayModelItem(href)];
+
+		this.refs.mediaDisplay.displayMedia(this.state.media, this.getMediaIndexOr0(href));
 		document.title = href;
 	},
 	handleCollectionSelect: function(href) {
-		this.setState({
-			mediaHref: ''
-		});
-		//this.refs.mediaDisplay.hide();
+		this.refs.mediaDisplay.hide();
 		document.title = href;
 	},
-	handleMediaDisplayClose: function(href) {
-		location.hash(href.split('/').slice(0, -1).join('/'));
+	handleMediaDisplayClose: function(media) {
+		location.hash(media.href.split('/').slice(0, -1).join('/'));
 	},
 	handleCollectionLoaded: function(items) {
-		//this.state = filterFileHrefs(items);
-		// TODO: set new state with file refs only 
+		this.state.media = this.toMediaDisplayModel(items);
 	},
 	getIconHref: function(item) {
 		if (item.resourcetype === 'collection')
@@ -72,7 +85,7 @@ var WebDavUI = React.createClass({
 	},
 	render: function() {
 		return <div>
-			<MediaDisplay mediaHref={this.state.mediaHref}
+			<MediaDisplay media={this.state.media}
 				rewriteImageHref={this.rewriteImageHref}
 				onClose={this.handleMediaDisplayClose}
 				ref="mediaDisplay" />

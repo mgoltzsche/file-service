@@ -149,7 +149,7 @@ var Dialog = React.createClass({
 			this._show = true;
 			modalOverlay.addClickListener(this._modalOverlayClickListener);
 			modalOverlay.show();
-//			this.setPreferredSize(this.props.prefWidth, this.props.prefHeight, this.props.resizeProportional);
+//			this.setPreferredContentSize(this.props.prefWidth, this.props.prefHeight, this.props.resizeProportional);
 			this.updateClassName();
 			return true;
 		}
@@ -177,7 +177,7 @@ var Dialog = React.createClass({
 		return false;
 	},
 	/* Method to set preferred size manually without rerendering everything */
-	setPreferredSize: function(width, height, resizeProportional) {
+	setPreferredContentSize: function(width, height, resizeProportional) {
 		var proportionalDefined = typeof resizeProportional !== 'undefined';
 
 		if (this._prefWidth !== width || this._prefWidth !== height ||

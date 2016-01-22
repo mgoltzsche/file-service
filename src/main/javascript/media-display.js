@@ -8,7 +8,8 @@ var MediaDisplay = React.createClass({
 	getDefaultProps: function() {
 		return {
 			className: '',
-			mediaHref: null,
+			media: [],
+			index: 0,
 			displayTypes: {
 				'jpg': 'image',
 				'jpeg': 'image',
@@ -26,30 +27,35 @@ var MediaDisplay = React.createClass({
 			rewriteStreamHref: function(href) {
 				return href;
 			},
-			onClose: function() {}
+			onClose: function(currentMedia, currentIndex) {}
 		};
 	},
 	getInitialState: function() {
 		return {
 			prefWidth: 100,
 			prefHeight: 100,
-			mediaHref: '',
+			media: [],
+			index: 0,
 			display: this.displays.hidden
 		};
 	},
 	componentDidMount: function() {
-		var mediaHref = this.props.mediaHref;
+		this._keyupListener = function(e) {
+			if (e.keyCode === 39) {
+				this.next();
+			} else if (e.keyCode === 37) {
+				this.previous();
+			}
+		}.bind(this);
 
-		if (typeof mediaHref == 'string' && mediaHref !== '') {
-			this.display(mediaHref);
-		}
-	},
-	componentWillUnmount: function() {
+		if (this.props.media.length > 0)
+			this.displayMedia(this.props.media, this.props.index);
 	},
 	componentWillUpdate: function(nextProps, nextState) {
-		if (nextProps.mediaHref !== this.props.mediaHref) {
-			if (nextProps.mediaHref) {
-				this.display(nextProps.mediaHref);
+		if (nextProps.media !== this.props.media ||
+				nextProps.index !== this.props.index) {
+			if (nextProps.media.length > 0) {
+				this.displayMedia(nextProps.media, nextProps.index);
 			} else {
 				this.hide();
 			}
@@ -66,15 +72,15 @@ var MediaDisplay = React.createClass({
 		}
 	},
 	handleClose: function() {
-		this.props.onClose(this.state.mediaHref);
+		this.props.onClose(this.state.media[this.state.index], this.state.index);
 	},
 	displays: {
 		image: {
 			name: 'image',
-			show: function(self, href) {
+			show: function(self, media) {
 				var maxWidth = self.refs.dialog.getMaxContentWidth();
 				var maxHeight = self.refs.dialog.getMaxContentHeight();
-				href = self.props.rewriteImageHref(href, maxWidth, maxHeight);
+				href = self.props.rewriteImageHref(media.href, maxWidth, maxHeight);
 				self.refs.image.showImage(href);
 			},
 			clear: function(self) {
@@ -83,15 +89,15 @@ var MediaDisplay = React.createClass({
 		},
 		stream: {
 			name: 'stream',
-			show: function(self, href) {
-				self.refs.stream.src = self.props.rewriteStreamHref(href);
+			show: function(self, media) {
+				self.refs.stream.src = self.props.rewriteStreamHref(media.href);
 				self.refs.stream.load();
 
 				if (self.refs.stream.error) {
 					log.debug('Video element error', self.refs.stream.error);
 				}
 
-				self.setPreferredSize(720, 480);
+				self.refs.dialog.setPreferredContentSize(720, 480);
 			},
 			clear: function(self) {
 				try {
@@ -103,9 +109,9 @@ var MediaDisplay = React.createClass({
 		},
 		iframe: {
 			name: 'iframe',
-			show: function(self, href) {
-				self.refs.iframe.src = href;
-				self.refs.dialog.setPreferredSize(1000, 1000, false);
+			show: function(self, media) {
+				self.refs.iframe.src = media.href;
+				self.refs.dialog.setPreferredContentSize(1024, 1024, false);
 			},
 			clear: function(self) {
 				self.refs.iframe.src = '';
@@ -113,9 +119,9 @@ var MediaDisplay = React.createClass({
 		},
 		download: {
 			name: 'download',
-			show: function(self, href) {
-				self.refs.download.href = href;
-				self.setPreferredSize(320, 240);
+			show: function(self, media) {
+				self.refs.download.href = media.href;
+				self.refs.dialog.setPreferredContentSize(320, 240);
 			},
 			clear: function() {}
 		},
@@ -125,53 +131,106 @@ var MediaDisplay = React.createClass({
 			clear: function() {}
 		}
 	},
-	display: function(mediaHref) {
-		if (this.state.mediaHref !== mediaHref) {
-			var extension = mediaHref.split('.').pop().toLowerCase();
-			var displayType = this.props.displayTypes[extension] || 'download';
-			var display = this.displays[displayType];
-
-			if (!display)
-				throw 'Unsupported media display type: ' + displayType;
-
-			log.debug('Display ' + display.name + ' ' + mediaHref);
-			this.state.mediaHref = mediaHref;
-			this.state.display.clear(this);
-			this.state.display = display;
-			this.state.display.show(this, mediaHref);
-			this.refs.label.href = mediaHref;
-			this.refs.label.title = mediaHref;
-			this.refs.label.innerHTML = decodeURIComponent(mediaHref.split('/').pop());
-			this.refs.container.className = this.getClassName();
-			this.refs.dialog.show();
-
-//			this.setState(this.state);
-		} else {
-			log.debug('Display ' + this.state.display.name + ' ' + mediaHref);
-			this.state.display.show(this, mediaHref);
-			this.refs.dialog.show()
+	displayMedia: function(media, index) {
+		if (media.length === 0) {
+			this.hide();
+			return;
 		}
+
+		if (typeof index === 'undefined')
+			index = 0;
+
+		if (index < 0 || index >= media.length)
+			throw 'MediaDisplay index out of range';
+
+		if (this.state.display === this.displays.hidden) {
+			document.addEventListener('keyup', this._keyupListener);
+		}
+
+		this.state.media = media;
+		this.state.index = index;
+
+		this._update();
+		this.refs.dialog.show();
+	},
+	_update: function() {
+		var media = this.state.media;
+		var index = this.state.index;
+		var currentMedia = media[index];
+		var href = currentMedia.href;
+		var label = currentMedia.label;
+		var extension = href.split('.').pop().toLowerCase();
+		var displayType = this.props.displayTypes[extension] || 'download';
+		var display = this.displays[displayType];
+
+		if (!display)
+			throw 'Unsupported media display type: ' + displayType;
+
+		// Hide last display if different media format
+		if (display !== this.state.display)
+			this.state.display.clear(this);
+
+		// Show new display with href
+		this.state.display = display;
+		this.state.display.show(this, currentMedia);
+
+		// Update label
+		if (media.length > 0) {
+			label += ' (' + (index + 1) + '/' + media.length + ')';
+		}
+
+		this.refs.label.href = href;
+		this.refs.label.title = href;
+		this.refs.label.innerHTML = label;
+
+		this._updateControls();
+		this.refs.container.className = 'media-display-' + this.state.display.name + ' ' + this.props.className;
+	},
+	_updateControls: function() {
+		this.refs.previous.className = 'previous' + (this.state.index > 0 ? '' : ' hidden');
+		this.refs.next.className = 'next' + (this.state.index < this.state.media.length - 1 ? '' : ' hidden');
 	},
 	hide: function() {
 		if (this.state.display !== this.displays.hidden) {
 			this.state.display.clear(this);
 			this.refs.dialog.hide();
+			document.removeEventListener('keyup', this._keyupListener);
 		}
 	},
-	setPreferredSize: function(width, height) {
-		this.refs.dialog.setPreferredSize(width, height, true); // Cheaper than setState
+	handlePrevious: function(e) {
+		e.preventDefault();
+		this.previous();
 	},
-	getClassName: function() {
-		return 'media-display-' + this.state.display.name + ' ' + this.props.className;
+	handleNext: function(e) {
+		e.preventDefault();
+		this.next();
+	},
+	previous: function() {
+		if (this.state.index > 0) {
+			this.state.index--;
+			this._update();
+		}
+	},
+	next: function() {
+		if (this.state.index < this.state.media.length - 1) {
+			this.state.index++;
+			this._update();
+		}
+	},
+	handleImageLoaded: function(width, height) {
+		this.refs.dialog.setPreferredContentSize(width, height, true); // Cheaper than setState
 	},
 	render: function() {
 		log.debug('RENDER MEDIA DISPLAY');
-		var mediaName = decodeURIComponent(this.state.mediaHref.split('/').pop());
-		var footer = <a ref="label">{mediaName}</a>;
+		var footer = <div>
+			<a ref="previous" onClick={this.handlePrevious}>previous</a>
+			<a ref="label" className="media-display-label"></a>
+			<a ref="next" onClick={this.handleNext}>next</a>
+		</div>;
 
 		return <Dialog className={'media-display' + (this.props.className ? ' ' + this.props.className : '')} footer={footer} onClose={this.handleClose} prefWidth={this.state.prefWidth} prefHeight={this.state.prefHeight} resizeProportional={true} ref="dialog">
-			<div className={this.getClassName()} ref="container">
-				<ImageLoader className="image-display" onLoad={this.setPreferredSize} ref="image" />
+			<div ref="container">
+				<ImageLoader className="image-display" onLoad={this.handleImageLoaded} ref="image" />
 				<video className="stream-display" width="100%" height="100%" controls onError={this.handleMediaError} ref="stream">
 					<span>Your browser does not support the video element. Go get a new Browser!</span>
 				</video>
