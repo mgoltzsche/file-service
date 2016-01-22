@@ -193,6 +193,7 @@ var MediaDisplay = React.createClass({
 	hide: function() {
 		if (this.state.display !== this.displays.hidden) {
 			this.state.display.clear(this);
+			this.state.display = this.displays.hidden;
 			this.refs.dialog.hide();
 			document.removeEventListener('keyup', this._keyupListener);
 		}
