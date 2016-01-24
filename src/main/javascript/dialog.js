@@ -263,7 +263,7 @@ var Dialog = React.createClass({
 		return <div className={this.getClassName()} ref="dialog">
 			<div className="dialog-header" ref="header">
 				{this.props.header}
-				<a className="dialog-close" onClick={this.handleClose}>X</a>
+				<a className="dialog-close" onClick={this.handleClose}></a>
 			</div>
 			<div className="dialog-content" ref="content">
 				{this.props.children}

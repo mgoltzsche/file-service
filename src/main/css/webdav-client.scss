@@ -1,10 +1,18 @@
-$borderColor: #777777;
 $backgroundColor: #ffffff;
-$actionColor: #114477;
+$backgroundColorHighlight: #f5f5f5;
+$borderColorLight: #eeeeee;
+$borderColor: #dddddd;
+$textColor: #333333;
+$actionColor: #3377cc;
+$borderRadius: 3px;
+$margin: 10px;
 
 @import "mixins.scss";
+@import "buttons.scss";
 @import "dialog.scss";
+@import "media-display.scss";
 @import "webdav-browser.scss";
+@import "icons.scss";
 
 html {
     height: 100%;
@@ -12,37 +20,15 @@ html {
 body {
     height: 100%;
     margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: $textColor;
+}
+
+.main {
+	margin: 10px 1%;
 }
 
 a {
 	text-decoration: none;
 	color: $actionColor;
-}
-
-.media-display {
-	.dialog-content {
-		text-align: center;
-	}
-	.dialog-footer {
-		height: 1.5em;
-	}
-
-	.image-display, .stream-display, .iframe-display, .download-display {
-			display: none;
-			border: none;
-	}
-	.media-display-image .image-display {
-		display: inline-block;
-		max-width: 100%;
-		max-height: 100%;
-	}
-	.media-display-stream .stream-display {
-		display: inline-block;
-	}
-	.media-display-iframe .iframe-display {
-		display: inline-block;
-	}
-	.media-display-download .download-display {
-		display: inline-block;
-	}
 }

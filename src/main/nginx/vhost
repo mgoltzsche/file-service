@@ -42,8 +42,8 @@ server {
 #		image_filter crop         100 100;
 	}
 
-	location ~ '/video/(.*?)\.mp4$' {
-		alias /var/www/robin/files/$1.mp4;
+	location ~ '/video/(.*?)\.(mp4|m4v|m4a)$' {
+		alias /var/www/robin/files/$1.$2;
 		mp4;
 		mp4_buffer_size       1m;
 		mp4_max_buffer_size   5m;

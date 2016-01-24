@@ -1,0 +1,5 @@
+@import "_icons.generated.scss";
+
+.dav-progress-indicator {
+	@include animate-rotation-pulse();
+}

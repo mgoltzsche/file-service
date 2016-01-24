@@ -6,12 +6,17 @@ var ImageLoader = React.createClass({
 	getDefaultProps: function() {
 		return {
 			src: '',
-			onLoad: function(width, height) {},
-			onLoadFailed: function() {}
+			onLoad: function(src, width, height) {},
+			onLoadFailed: function(src) {}
+		};
+	},
+	getInitialState: function() {
+		return {
+			src: null,
+			loading: true
 		};
 	},
 	componentDidMount: function() {
-		this._currentSrc = null;
 		this._preloadElement = document.createElement('img');
 		this._loadListener = function(e) {
 			this._removePreloadListeners();
@@ -21,7 +26,8 @@ var ImageLoader = React.createClass({
 			log.debug('Failed to load image: ' + e.target.src);
 			this._removePreloadListeners();
 			this.refs.image.src = 'error.jpg';
-			this.props.onLoadFailed();
+			this.setLoading(false);
+			this.props.onLoadFailed(e.target.src);
 		}.bind(this);
 		this._removePreloadListeners = function() {
 			this._preloadElement.removeEventListener('load', this._loadListener);
@@ -31,8 +37,6 @@ var ImageLoader = React.createClass({
 		// Load image
 		this.showImage(this.props.src);
 	},
-	componentWillUnmount: function() {
-	},
 	componentWillUpdate: function(nextProps) {
 		if (this.props.src !== nextProps.src)
 			this.showImage(nextProps.src);
@@ -40,31 +44,41 @@ var ImageLoader = React.createClass({
 	_onImageLoaded: function(href, width, height) {
 		log.debug('loaded: ' + href + ' (' + width + 'x' + height + ')');
 		this.refs.image.src = href;
-		this.props.onLoad(width, height);
+		this.setLoading(false);
+		this.props.onLoad(href, width, height);
 	},
 	showImage: function(src) {
 		if (!src) {
-			if (!!this._currentSrc)
-				this.refs.image.src = this._currentSrc = '';
+			if (!!this.state.src)
+				this.refs.image.src = this.state.src = '';
 			return;
 		}
 
 		log.debug('loading: ' + src);
 		var img = this._preloadElement;
-		img.src = this._currentSrc = src;
+		img.src = this.state.src = src;
 
 		if (img.complete) {
 			this.refs.image.src = src;
-			this._onImageLoaded(img.src, img.naturalWidth, img.naturalHeight);
+			this.setLoading(false);
+			this._onImageLoaded(src, img.naturalWidth, img.naturalHeight);
 		} else {
-			this.refs.image.src = 'spinner.jpg';
+			this.setLoading(true);
 			img.addEventListener('load', this._loadListener);
 			img.addEventListener('error', this._errorListener);
 		}
 	},
+	setLoading: function(loading) {
+		this.state.loading = loading;
+		this.refs.container.className = this.getClassName();
+	},
+	getClassName: function() {
+		return 'image-loader ' + this.props.className + (this.state.loading ? ' loading' : '');
+	},
 	render: function() {
 		log.debug('RENDER IMAGE');
-		return <div className={'image-loader ' + this.props.className}>
+		return <div className={this.getClassName()} ref="container">
+			<i className="progress-indicator"> </i>
 			<img ref="image" />
 		</div>
 	}

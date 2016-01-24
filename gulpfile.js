@@ -12,8 +12,12 @@ var eslint = require('babel-eslint');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 var del = require('del');
+var iconfont = require('gulp-iconfont');
+var consolidate = require('gulp-consolidate');
+var runTimestamp = Math.round(Date.now()/1000);
+var fontName = 'webdav-icons';
 
-gulp.task('default', ['browserify', 'sass'], function() {
+gulp.task('default', ['browserify', 'sass', 'iconfont'], function() {
 	return gulp.src('./package.json')
 		.pipe(gulp.dest('${basedir}/target/web-distribution'));
 });
@@ -26,8 +30,8 @@ gulp.task('babel', ['clean'], function() {
 		.pipe(gulp.dest('js'));
 });
 
-gulp.task('sass', ['clean'], function() {
-	return gulp.src(['${basedir}/src/main/css/webdav-client.scss'])
+gulp.task('sass', ['clean', 'iconfont'], function() {
+	return gulp.src(['css/webdav-client.scss'])
 		.pipe(sourcemaps.init())
 		.pipe(sass({outputStyle: 'compressed'}))
 		.pipe(sourcemaps.write())
@@ -40,8 +44,29 @@ gulp.task('browserify', ['clean', 'lint'], function() {
 		.bundle()
 		.pipe(source(pkg.name + '-' + pkg.version + '.min.js')) // converts to vinyl src with name
 		.pipe(buffer())                     // converts to vinyl buffer obj
-		.pipe(uglify()) 
+		.pipe(uglify())
 		.pipe(gulp.dest('${basedir}/target/web-distribution/js'));
+});
+
+gulp.task('iconfont', function(){
+	return gulp.src(['${basedir}/src/main/icons/*.svg'])
+		.pipe(iconfont({
+			fontName: fontName,
+			appendUnicode: true,
+			formats: ['ttf', 'eot', 'woff'], // default, 'woff2' and 'svg' are available
+			timestamp: runTimestamp // recommended to get consistent builds when watching files
+		}))
+		.on('glyphs', function(glyphs, options) {
+			gulp.src('${basedir}/src/main/css-templates/_icons.generated.scss')
+			.pipe(consolidate('lodash', {
+				glyphs: glyphs,
+				fontName: fontName,
+				fontPath: '../fonts/',
+				className: 'dav'
+			}))
+			.pipe(gulp.dest('css'));
+		})
+		.pipe(gulp.dest('${basedir}/target/web-distribution/fonts'));
 });
 
 gulp.task('lint', function() {

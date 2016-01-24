@@ -27,7 +27,8 @@ var MediaDisplay = React.createClass({
 			rewriteStreamHref: function(href) {
 				return href;
 			},
-			onClose: function(currentMedia, currentIndex) {}
+			onDisplay: function(media, index) {},
+			onClose: function(media, index) {}
 		};
 	},
 	getInitialState: function() {
@@ -72,7 +73,7 @@ var MediaDisplay = React.createClass({
 		}
 	},
 	handleClose: function() {
-		this.props.onClose(this.state.media[this.state.index], this.state.index);
+		this.props.onClose(this.state.media, this.state.index);
 	},
 	displays: {
 		image: {
@@ -137,6 +138,9 @@ var MediaDisplay = React.createClass({
 			return;
 		}
 
+		if (this.state.display !== this.displays.hidden && media === this.state.media && index === this.state.index)
+			return;
+
 		if (typeof index === 'undefined')
 			index = 0;
 
@@ -152,6 +156,7 @@ var MediaDisplay = React.createClass({
 
 		this._update();
 		this.refs.dialog.show();
+		this.props.onDisplay(media, index);
 	},
 	_update: function() {
 		var media = this.state.media;
@@ -210,23 +215,25 @@ var MediaDisplay = React.createClass({
 		if (this.state.index > 0) {
 			this.state.index--;
 			this._update();
+			this.props.onDisplay(this.state.media, this.state.index);
 		}
 	},
 	next: function() {
 		if (this.state.index < this.state.media.length - 1) {
 			this.state.index++;
 			this._update();
+			this.props.onDisplay(this.state.media, this.state.index);
 		}
 	},
-	handleImageLoaded: function(width, height) {
+	handleImageLoaded: function(href, width, height) {
 		this.refs.dialog.setPreferredContentSize(width, height, true); // Cheaper than setState
 	},
 	render: function() {
 		log.debug('RENDER MEDIA DISPLAY');
 		var footer = <div>
-			<a ref="previous" onClick={this.handlePrevious}>previous</a>
+			<a ref="previous" title="previous" onClick={this.handlePrevious}></a>
 			<a ref="label" className="media-display-label"></a>
-			<a ref="next" onClick={this.handleNext}>next</a>
+			<a ref="next" title="next" onClick={this.handleNext}></a>
 		</div>;
 
 		return <Dialog className={'media-display' + (this.props.className ? ' ' + this.props.className : '')} footer={footer} onClose={this.handleClose} prefWidth={this.state.prefWidth} prefHeight={this.state.prefHeight} resizeProportional={true} ref="dialog">

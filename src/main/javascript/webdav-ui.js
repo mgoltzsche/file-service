@@ -16,8 +16,18 @@ var WebDavUI = React.createClass({
 	},
 	getInitialState: function() {
 		return {
-			media: []
+			media: [],
+			currentMediaHref: null
 		}
+	},
+	componentDidMount: function() {
+		this._locationListener = function(hash) {
+			this.refs.browser.select(hash);
+		}.bind(this);
+		location.addListener(this._locationListener);
+	},
+	componentWillUnmount: function() {
+		location.removeListener(this._locationListener);
 	},
 	getScaledImageHref: function(href, width, height) {
 		return href.replace(this._imageHrefPattern, '/image/$1-' + width + 'x' + height + '.$2');
@@ -28,11 +38,8 @@ var WebDavUI = React.createClass({
 		for (var i = 0; i < webdavItems.length; i++) {
 			var item = webdavItems[i];
 
-			if (item.resourcetype !== 'collection') {
-				var href = item.href;
-
+			if (item.resourcetype !== 'collection')
 				media.push(this.toMediaDisplayModelItem(item.href));
-			}
 		}
 
 		return media;
@@ -46,10 +53,9 @@ var WebDavUI = React.createClass({
 	getMediaIndexOr0: function(href) {
 		var media = this.state.media;
 
-		for (var i = 0; i < media.length; i++) {
+		for (var i = 0; i < media.length; i++)
 			if (media[i].href === href)
 				return i;
-		}
 
 		return 0;
 	},
@@ -57,27 +63,40 @@ var WebDavUI = React.createClass({
 		if (this.state.media.length === 0)
 			this.state.media = [this.toMediaDisplayModelItem(href)];
 
-		this.refs.mediaDisplay.displayMedia(this.state.media, this.getMediaIndexOr0(href));
+		var index = this.getMediaIndexOr0(href);
+		this.refs.mediaDisplay.displayMedia(this.state.media, index);
 		document.title = href;
 	},
 	handleCollectionSelect: function(href) {
+		location.hash(href);
 		this.refs.mediaDisplay.hide();
 		document.title = href;
 	},
-	handleMediaDisplayClose: function(media) {
-		location.hash(media.href.split('/').slice(0, -1).join('/'));
+	handleMediaDisplayed: function(media, index) {
+		var href = this.state.currentMediaHref = media[index].href;
+		location.hash(href);
+		document.title = href;
+	},
+	handleMediaDisplayClose: function(media, index) {
+		var mediaItem = media[index];
+		var collectionHref = mediaItem.href.split('/').slice(0, -1).join('/');
+		this.state.currentMediaHref = null;
+		location.hash(collectionHref);
+		document.title = collectionHref;
 	},
 	handleCollectionLoaded: function(items) {
 		this.state.media = this.toMediaDisplayModel(items);
-	},
-	getIconHref: function(item) {
-		if (item.resourcetype === 'collection')
-			return ''; // TODO: return collection icon href
 
+		if (this.state.currentMediaHref !== null) {
+			var index = this.getMediaIndexOr0(this.state.currentMediaHref);
+			this.refs.mediaDisplay.displayMedia(this.state.media, index);
+		}
+	},
+	getPreviewHref: function(item) {
 		if (this._imageHrefPattern.test(item.href))
 			return this.getScaledImageHref(item.href, 27, 23);
 
-		return '';
+		return null;
 	},
 	rewriteImageHref: function(href, maxWidth, maxHeight) {
 		// TODO: Limit possible image resolutions
@@ -86,15 +105,17 @@ var WebDavUI = React.createClass({
 	render: function() {
 		return <div>
 			<MediaDisplay media={this.state.media}
-				rewriteImageHref={this.rewriteImageHref}
+				onDisplay={this.handleMediaDisplayed}
 				onClose={this.handleMediaDisplayClose}
+				rewriteImageHref={this.rewriteImageHref}
 				ref="mediaDisplay" />
 			<WebDavBrowser rootURL={this.props.rootURL}
 				client={this.props.client}
 				onSelectFile={this.handleFileSelect}
 				onSelectCollection={this.handleCollectionSelect}
 				onCollectionLoaded={this.handleCollectionLoaded}
-				getIconHref={this.getIconHref} />
+				getPreviewHref={this.getPreviewHref}
+				ref="browser" />
 		</div>
 	}
 });

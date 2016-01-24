@@ -1,0 +1,8 @@
+.button {
+	display: inline-block;
+	margin: $margin/2 0 $margin/2 $margin;
+	padding: $margin/2;
+	color: $backgroundColor;
+	background: $actionColor;
+	@include border-radius($borderRadius);
+}

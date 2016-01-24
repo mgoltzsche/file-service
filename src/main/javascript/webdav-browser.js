@@ -1,8 +1,8 @@
+var log = require('./logger.js')('WebDavBrowser');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var WebDavClient = require('./webdav-client.js');
 var UploadForm = require('./upload-form.js');
-var location = require('./hash-location.js');
 var formatSize = require('./format-size.js');
 
 var itemName = function(href) {
@@ -16,36 +16,35 @@ var collectionHref = function(docHref) {
 var WebDavBrowser = React.createClass({
 	getDefaultProps: function() {
 		return {
+			rootURL: '',
 			client: new WebDavClient(),
-			getIconHref: function(item) {return '';},
+			className: '',
+			getPreviewHref: function(item) {return '';},
 			onSelectFile: function(href) {},
 			onSelectCollection: function(href) {},
 			onCollectionLoaded: function(collection) {}
 		};
 	},
 	getInitialState: function() {
-		return {collectionHref: null, items: [], displayFile: null};
+		return {
+			collectionHref: null,
+			items: [],
+			mode: 'loading'
+		};
 	},
 	componentDidMount: function() {
 		this._collections = {};
-		this._locationListener = function(hash) {
-			this.browseCollection(hash);
-		}.bind(this);
-		location.addListener(this._locationListener);
-	},
-	componentWillUnmount: function() {
-		location.removeListener(this._locationListener);
 	},
 	handleRefresh: function(e) {
-		e.preventDefault();
-		this.update();
-	},
-	handleItemDelete: function(item) {
-		if (confirm('Do you really want to delete ' + item.href + '?')) {
-			this.props.client.delete(item.href, function() {
-				this.update();
-			}.bind(this));
+		try {
+			e.preventDefault();
+			this.update();
+		} catch(e) {
+			log.error('Refresh failed', e);
 		}
+	},
+	handleItemSelect: function(item) {
+		this.select(item.href);
 	},
 	handleItemMove: function(item) {
 		var destination = prompt('Please type the destination you want the resource ' + item.href + ' to be moved to:', item.href);
@@ -56,7 +55,14 @@ var WebDavBrowser = React.createClass({
 			}.bind(this));
 		}
 	},
-	browseCollection: function(href) {
+	handleItemDelete: function(item) {
+		if (confirm('Do you really want to delete ' + item.href + '?')) {
+			this.props.client.delete(item.href, function() {
+				this.update();
+			}.bind(this));
+		}
+	},
+	select: function(href) {
 		var fileSelected = false;
 
 		if (this._collections[href] === false) {
@@ -84,6 +90,12 @@ var WebDavBrowser = React.createClass({
 		if (typeof href !== 'string')
 			return;
 
+		this.setState({
+			collectionHref: href,
+			items: this.state.items,
+			mode: 'loading'
+		});
+
 		this.props.client.propfind(href, 1, function(items) {
 			var requestedItem = items[0];
 			var requestedItemHref = requestedItem.href;
@@ -106,29 +118,45 @@ var WebDavBrowser = React.createClass({
 
 			this.setState({
 				collectionHref: requestedItemHref,
-				items: items.slice(1)
+				items: items.slice(1),
+				mode: 'ready'
 			});
 
 			this.props.onCollectionLoaded(items);
+		}.bind(this), function(xhr) {
+			this.setState({
+				collectionHref: this.state.collectionHref,
+				items: [],
+				mode: 'ready'
+			});
+			alert('WebDAV request failed with HTTP status code ' + xhr.status + '!');
 		}.bind(this));
 	},
 	render: function() {
 		var baseURL = this.state.collectionHref + '/';
+		var className = 'webdav-browser ' + (this.props.className ? this.props.className + ' ' : '') + this.state.mode
 		var collectionItems = this.state.items.map(function(item) {
-			return <WebDavItem item={item} getIconHref={this.props.getIconHref} onDelete={this.handleItemDelete} onMove={this.handleItemMove} key={item.href} />;
+			return <WebDavItem item={item}
+				getPreviewHref={this.props.getPreviewHref}
+				onSelect={this.handleItemSelect}
+				onMove={this.handleItemMove}
+				onDelete={this.handleItemDelete}
+				key={item.href} />;
 		}.bind(this));
-		return <section className="webdav-browser">
-			<WebDavBreadcrumbs path={this.state.collectionHref} />
-			<nav className="webdav-action-bar">
-				<ul>
-					<li><a href={'#' + this.state.collectionHref} onClick={this.handleRefresh}>refresh</a></li>
-				</ul>
-			</nav>
-			<ul className="webdav-collection">
+		return <article className={className}>
+			<header className="webdav-browser-header">
+				<div className="webdav-item-icon" ref="icon"></div>
+				<WebDavBreadcrumbs path={this.state.collectionHref}
+					onSelect={this.select}/>
+				<div className="webdav-controls">
+					<a href={'#' + this.state.collectionHref} className="button dav dav-refresh" onClick={this.handleRefresh} title="refresh"></a>
+				</div>
+			</header>
+			<ul className="webdav-collection-content">
 				{collectionItems}
 			</ul>
 			<UploadForm baseURL={baseURL} onUploadComplete={this.update} client={this.props.client} />
-		</section>
+		</article>
 		// TODO: populate upload form base URL not via props but use exposed method
 	}
 });
@@ -136,28 +164,44 @@ var WebDavBrowser = React.createClass({
 var WebDavItem = React.createClass({
 	getDefaultProps: function() {
 		return {
-			getIconHref: function(item) {return '';},
-			onDelete: function(href) {},
-			onMove: function(href) {}
+			getPreviewHref: function(item) {return '';},
+			onSelect: function(item) {},
+			onMove: function(item) {},
+			onDelete: function(item) {}
 		};
 	},
 	handleClick: function(e) {
-		e.preventDefault();
-		location.hash(this.props.item.href);
+		try {
+			e.preventDefault();
+			this.props.onSelect(this.props.item);
+		} catch(e) {
+			log.error('Item select failed', e);
+		}
 	},
 	handleDelete: function(e) {
-		e.preventDefault();
-		this.props.onDelete(this.props.item);
+		try {
+			e.preventDefault();
+			this.props.onDelete(this.props.item);
+		} catch(e) {
+			log.error('Item delete failed', e);
+		}
 	},
 	handleMove: function(e) {
-		e.preventDefault();
-		this.props.onMove(this.props.item);
+		try {
+			e.preventDefault();
+			this.props.onMove(this.props.item);
+		} catch(e) {
+			log.error('Item move failed', e);
+		}
 	},
 	render: function() {
 		var item = this.props.item;
 		var properties = item.properties;
 		var fileSize = formatSize(properties.getcontentlength);
 		var title = item.href;
+		var isCollection = item.resourcetype === 'collection';
+		var previewHref = isCollection ? '' : this.props.getPreviewHref(item);
+		var iconClassName = 'webdav-item-icon' + (previewHref ? ' preview' : '') + (isCollection ? ' webdav-icon-collection' : ' webdav-icon-file')
 
 		for (var name in properties) {
 			if (properties.hasOwnProperty(name)) {
@@ -166,35 +210,45 @@ var WebDavItem = React.createClass({
 		}
 
 		return <li className="webdav-item">
-			<img src={this.props.getIconHref(item)} alt="" width="27" height="23" />
+			<div className={iconClassName}>
+				<img src={previewHref} alt="" />
+				<i></i>
+			</div>
 			<a href={'#' + item.href} title={title} onClick={this.handleClick} className="webdav-item-label">{item.name}</a> 
-			<span className="webdav-item-action-bar">
-				<a href="javascript://move" onClick={this.handleMove}>move</a> 
-				<a href="javascript://delete" onClick={this.handleDelete}>delete</a>
-			</span>
-			<span className="webdav-file-size">{fileSize}</span>
+			<div className="webdav-item-controls">
+				<a href="javascript://move" className="button dav dav-pencil" onClick={this.handleMove} title="move"></a> 
+				<a href="javascript://delete" className="button dav dav-trash" onClick={this.handleDelete} title="delete"></a>
+			</div>
+			<div className="webdav-item-size">{fileSize}</div>
 		</li>;
 	}
 });
 
 var WebDavBreadcrumbs = React.createClass({
-	handleClick: function(href) {
-		location.hash(href);
+	getDefaultProps: function() {
+		return {
+			path: '',
+			onSelect: function(href) {}
+		};
 	},
 	render: function() {
 		var segments = (this.props.path || '').split('/').slice(1);
 		var href = '';
 		var breadcrumbs = segments.map(function(segment) {
 			href += '/' + segment;
-			var handleClick = (function(href) {return function(e) {
-				e.preventDefault();
-				location.hash(href);
-			};})(href);
+			var handleClick = (function(self, href) {return function(e) {
+				try {
+					e.preventDefault();
+					self.props.onSelect(href);
+				} catch(e) {
+					log.error('Breadcrumb select failed', e);
+				}
+			};})(this, href);
 
 			return <li key={href}>
 				<a href={'#' + href} title={href} onClick={handleClick}>{decodeURIComponent(segment)}</a>
 			</li>
-		});
+		}.bind(this));
 
 		return <nav className="breadcrumbs">
 			<ul>

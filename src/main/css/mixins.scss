@@ -12,15 +12,7 @@
 
 @mixin opacity($opacity) {
 	opacity: $opacity / 100;
-	//TODO:filter: alpha(opacity=$opacity);
-}
-
-@mixin translate($x, $y) {
-	-webkit-transform: translate($x, $y);
-	   -moz-transform: translate($x, $y);
-	    -ms-transform: translate($x, $y);
-	     -o-transform: translate($x, $y);
-	        transform: translate($x, $y);
+	filter: alpha(opacity=$opacity);
 }
 
 @mixin gradient-horizontal-three-colors($startColor: #00b3ee, $midColor: #7a43b6, $colorStop: 50%, $endColor: #c3325f) {
@@ -52,4 +44,57 @@
 	background-image: -moz-radial-gradient(circle, $innerColor, $outerColor);
 	background-image: -o-radial-gradient(circle, $innerColor, $outerColor);
 	background-repeat: no-repeat;
+}
+
+@mixin translate($x, $y) {
+	-webkit-transform: translate($x, $y);
+	   -moz-transform: translate($x, $y);
+	    -ms-transform: translate($x, $y);
+	     -o-transform: translate($x, $y);
+	        transform: translate($x, $y);
+}
+
+@mixin rotate($degrees) {
+	-webkit-transform: rotate($degrees);
+	 -moz-transform: rotate($degrees);
+	  -ms-transform: rotate($degrees);
+	   -o-transform: rotate($degrees);
+	      transform: rotate($degrees);
+}
+
+/* ANIMATIONS */
+
+@-webkit-keyframes dav-kf-rotate {
+	0%   { @include rotate(0deg);   }
+	100% { @include rotate(359deg); }
+}
+@-moz-keyframes dav-kf-rotate {
+	0%   { @include rotate(0deg);   }
+	100% { @include rotate(359deg); }
+}
+@-o-keyframes dav-kf-rotate {
+	0%   { @include rotate(0deg);   }
+	100% { @include rotate(359deg); }
+}
+@keyframes dav-kf-rotate {
+	0%   { @include rotate(0deg);   }
+	100% { @include rotate(359deg); }
+}
+
+@mixin animation($animation) {
+	-webkit-animation: $animation;
+	   -moz-animation: $animation;
+	     -o-animation: $animation;
+	        animation: $animation;
+}
+
+@mixin transition($transition...) {
+  -webkit-transition: $transition;
+     -moz-transition: $transition;
+       -o-transition: $transition;
+          transition: $transition;
+}
+
+@mixin animate-rotation-pulse($rotationTime: 1s, $steps: 8) {
+	@include animation(dav-kf-rotate $rotationTime infinite steps($steps));
 }

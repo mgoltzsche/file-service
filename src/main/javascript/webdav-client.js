@@ -50,13 +50,25 @@ WebDavClient.prototype._createRequest = function(method, path, callback, errorCa
 	try {
 		xhr = new XMLHttpRequest();
 		xhr.onerror = (function(callback, xhr) {return function() {
-			callback(xhr);
+			try {
+				callback(xhr);
+			} catch(e) {
+				log.error('Error callback error', e);
+			}
 		};})(errorCallback || this._errorHandler, xhr);
 		xhr.onload = (function(callback, xhr) {return function() {
 			if (xhr.status >= 200 && xhr.status < 300) {
-				callback(xhr);
+				try {
+					callback(xhr);
+				} catch(e) {
+					log.error('Success callback error', e);
+				}
 			} else {
-				xhr.onerror(xhr);
+				try {
+					xhr.onerror(xhr);
+				} catch(e) {
+					log.error('Error callback error', e);
+				}
 			}
 		};})(callback, xhr);
 	} catch(e) {
