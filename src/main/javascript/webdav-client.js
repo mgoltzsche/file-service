@@ -5,9 +5,9 @@ function WebDavClient(errorHandler) {
 }
 
 WebDavClient.prototype.propfind = function(path, depth, callback, errorCallback) {
-	var callbackConverter = (function(callback, self) {return function(xhr) {
-		callback(self._parsePropfindResult(xhr));
-	};})(callback, this);
+	var callbackConverter = function(callback, xhr) {
+		callback(this._parsePropfindResult(xhr));
+	}.bind(this, callback);
 	var xhr = this._createRequest('PROPFIND', path, callbackConverter, errorCallback);
 	var xml = '<?xml version="1.0" encoding="UTF-8" ?>' +
 		'<D:propfind xmlns:D="DAV:"><D:allprop /></D:propfind>';

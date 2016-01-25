@@ -157,7 +157,6 @@ var WebDavBrowser = React.createClass({
 			</ul>
 			<UploadForm baseURL={baseURL} onUploadComplete={this.update} client={this.props.client} />
 		</article>
-		// TODO: populate upload form base URL not via props but use exposed method
 	}
 });
 
@@ -236,14 +235,14 @@ var WebDavBreadcrumbs = React.createClass({
 		var href = '';
 		var breadcrumbs = segments.map(function(segment) {
 			href += '/' + segment;
-			var handleClick = (function(self, href) {return function(e) {
+			var handleClick = function(href, e) {
 				try {
 					e.preventDefault();
-					self.props.onSelect(href);
+					this.props.onSelect(href);
 				} catch(e) {
 					log.error('Breadcrumb select failed', e);
 				}
-			};})(this, href);
+			}.bind(this, href);
 
 			return <li key={href}>
 				<a href={'#' + href} title={href} onClick={handleClick}>{decodeURIComponent(segment)}</a>

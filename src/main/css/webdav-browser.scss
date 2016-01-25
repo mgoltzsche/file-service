@@ -104,13 +104,13 @@
 			}
 
 			a.webdav-item-label {
-				padding: $margin $margin $margin 0; 
+				padding: $margin $margin $margin 0;
 				line-height: 1.3em;
 
 				&:visited {
-					font-weight: bold;
+					color: lighten($actionColor, 10%);
 				}
-				
+
 				&:active {
 					color: darken($actionColor, 20%);
 				}
