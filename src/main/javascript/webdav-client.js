@@ -28,7 +28,13 @@ WebDavClient.prototype.delete = function(path, callback, errorCallback) {
 WebDavClient.prototype.put = function(path, file, callback, progressCallback, errorCallback) {
 	var xhr = this._createRequest('PUT', path, callback, errorCallback);
 
-	xhr.upload.onprogress = progressCallback;
+	xhr.upload.onprogress = function(evt) {
+		try {
+			this(evt.loaded, evt.total);
+		} catch(e) {
+			log.error('Upload progress propagation failed', e);
+		}
+	}.bind(progressCallback);
 	xhr.setRequestHeader('Content-Type', file.type);
 	xhr.send(file);
 };
@@ -45,36 +51,36 @@ WebDavClient.prototype.move = function(path, destination, callback, errorCallbac
 };
 
 WebDavClient.prototype._createRequest = function(method, path, callback, errorCallback) {
-	var xhr;
-
-	try {
-		xhr = new XMLHttpRequest();
-		xhr.onerror = (function(callback, xhr) {return function() {
-			try {
-				callback(xhr);
-			} catch(e) {
-				log.error('Error callback error', e);
-			}
-		};})(errorCallback || this._errorHandler, xhr);
-		xhr.onload = (function(callback, xhr) {return function() {
-			if (xhr.status >= 200 && xhr.status < 300) {
-				try {
-					callback(xhr);
-				} catch(e) {
-					log.error('Success callback error', e);
-				}
-			} else {
-				try {
-					xhr.onerror(xhr);
-				} catch(e) {
-					log.error('Error callback error', e);
-				}
-			}
-		};})(callback, xhr);
-	} catch(e) {
+	if (typeof XMLHttpRequest === 'undefined') {
 		alert("Your Browser does not support XMLHttpRequest. Get a new browser!\nError: " + e);
-		throw("Browser not supported");
+		throw("XMLHttpRequest not supported");
 	}
+
+	var reqName = method + ' ' + path;
+	var xhr = new XMLHttpRequest();
+
+	xhr.onerror = function(xhr, req) {
+		try {
+			this(xhr);
+		} catch(e) {
+			log.error('Failure callback error in ' + req, e);
+		}
+	}.bind(errorCallback || this._errorHandler, xhr, reqName);
+	xhr.onload = function(xhr, req) {
+		if (xhr.status >= 200 && xhr.status < 300) {
+			try {
+				this(xhr);
+			} catch(e) {
+				log.error('Success callback error in ' + req, e);
+			}
+		} else {
+			try {
+				xhr.onerror();
+			} catch(e) {
+				log.error('Failure callback error in ' + req, e);
+			}
+		}
+	}.bind(callback, xhr, reqName);
 
 	log.debug('XHR: ' + method + ' ' + path);
 	xhr.open(method, path, true);

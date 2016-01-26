@@ -62,6 +62,9 @@ var WebDavBrowser = React.createClass({
 			}.bind(this));
 		}
 	},
+	handleUploadComplete: function(upload) {
+		this.update();
+	},
 	select: function(href) {
 		var fileSelected = false;
 
@@ -155,7 +158,7 @@ var WebDavBrowser = React.createClass({
 			<ul className="webdav-collection-content">
 				{collectionItems}
 			</ul>
-			<UploadForm baseURL={baseURL} onUploadComplete={this.update} client={this.props.client} />
+			<UploadForm baseURL={baseURL} onUploadComplete={this.handleUploadComplete} client={this.props.client} />
 		</article>
 	}
 });

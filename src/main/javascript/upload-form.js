@@ -5,122 +5,122 @@ var formatSize = require('./format-size.js');
 
 var UploadForm = React.createClass({
 	getDefaultProps: function() {
-		return {onUploadComplete: function() {}}
+		return {onUploadComplete: function(upload) {}}
 	},
 	getInitialState: function() {
-		return {pending: []};
-	},
-	componentDidMount: function() {
-		this._uploadCount = 0;
+		return {
+			pendingUploads: [],
+			uploadIdSequence: 0
+		};
 	},
 	removePendingUpload: function(upload) {
-		log.debug('Upload removed: ' + upload.name);
-		var pending = this.state.pending;
+		log.debug('Remove upload: ' + upload.label);
+		var pendingUploads = this.state.pendingUploads;
 
-		for (var i = 0; i < pending.length; i++) {
-			if (pending[i] === upload) {
-				delete pending[i];
+		for (var i = 0; i < pendingUploads.length; i++) {
+			if (pendingUploads[i] === upload) {
+				delete pendingUploads[i];
 				this.setState(this.state);
 				return;
 			}
 		}
 	},
-	handleFilesAdded: function(e) {
-		e.preventDefault();
+	handleFilesAdded: function(evt) {
+		try {
+			evt.preventDefault();
 
-		var input = e.target;
-		var files = input.files;
+			var input = evt.target;
+			var files = input.files;
 
-		if (files.length == 0) {
-			alert("Please choose a file to upload");
-			return;
-		}
-
-		for (var i = 0; i < files.length; i++) {
-			var file = files[i];
-			var upload = {
-				name: file.name,
-				size: file.size,
-				id: 'upload-' + this._uploadCount++,
-				onProgressChange: function(progress) {}
-			};
-
-			this.state.pending.push(upload);
-			this.setState(this.state);
-			this.props.client.put(this.props.baseURL + file.name, file, function(upload) {
-				try {
-					this.props.onUploadComplete();
-				} catch(e) {
-					log.error('Error in upload complete listener', e);
-				}
-				this.removePendingUpload(upload);
-			}.bind(this, upload),
-			function(e) {
-				this.onProgressChange(e.loaded / e.total);
-			}.bind(upload),
-			function(upload) {
-				this.removePendingUpload(upload);
-				alert('Failed to upload ' + upload.name);
-			}.bind(this, upload));
-		}
-
-		// Reset input field
-		try{
-			input.value = '';
-			if (input.value) {
-				input.type = 'text';
-				input.type = 'file';
+			if (files.length == 0) {
+				alert("Please choose a file to upload");
+				return;
 			}
-		}catch(e){}
+
+			for (var i = 0; i < files.length; i++) {
+				var file = files[i];
+				var upload = {
+					label: file.name,
+					info: ' (' + formatSize(file.size) + ')',
+					id: 'upload' + this.state.uploadIdSequence++,
+					progress: 0,
+					onProgressChange: function(progress) {}
+				};
+
+				this.state.pendingUploads.push(upload);
+				this.setState(this.state);
+				this.props.client.put(this.props.baseURL + file.name, file, function(upload) {
+					this.removePendingUpload(upload);
+					this.props.onUploadComplete(upload);
+				}.bind(this, upload),
+				function(loaded, total) {
+					this.onProgressChange(total === 0 ? 0 : loaded / total);
+				}.bind(upload),
+				function(upload) {
+					this.removePendingUpload(upload);
+					alert('Failed to upload ' + upload.label);
+				}.bind(this, upload));
+			}
+
+			// Reset input field
+			try{
+				input.value = '';
+				if (input.value) {
+					input.type = 'text';
+					input.type = 'file';
+				}
+			}catch(e){}
+		} catch(error) {
+			log.error('Upload initialization failed', error);
+		}
 	},
 	render: function() {
 		return <section>
-			<form onSubmit={this.upload}>
+			<form>
 				<div>
 					<input type="file" onChange={this.handleFilesAdded} multiple />
 				</div>
-				<PendingUploads items={this.state.pending} />
+				<PendingTasks tasks={this.state.pendingUploads} />
 			</form>
 		</section>
 	}
 });
 
-var PendingUploads = React.createClass({
+var PendingTasks = React.createClass({
 	getDefaultProps: function() {
-		return {items: []};
+		return {tasks: []};
 	},
 	render: function() {
-		return <ul className="uploads-pending">
-			{this.props.items.map(function(item) {
-				<PendingUpload item={item} key={item.id} />
+		return <ul className="pending-tasks">
+			{this.props.tasks.map(function(task) {
+				return <PendingTask task={task} key={task.id} />
 			})}
 		</ul>;
 	}
 });
 
-var PendingUpload = React.createClass({
+var PendingTask = React.createClass({
 	getInitialState: function() {
 		return {progress: 0};
 	},
+	componentDidMount: function() {
+		this.refs.progressBar.value = this.state.progress = 0;
+	},
 	render: function() {
-		var item = this.props.item;
-		item.onProgressChange = function(progress) {
-			var progress = Math.round(progress * 100);
-			
-			if (progress !== this.state.progress) {
-				log.debug(this.props.id + ' ' + progress);
-				this.setState({progress: progress});
-			}
+		var task = this.props.task;
+		task.onProgressChange = function(progress) {
+			progress *= 100;
+
+			if (progress !== this.state.progress)
+				this.refs.progressBar.value = this.state.progress = progress;
 		}.bind(this);
 
-		return <li className="upload-item" key={item.id}>
+		return <li className="pending-task" key={task.id}>
 			<div>
-				{item.name}
-				<span className="upload-item-size">
-					({formatSize(item.size)})
-				</span>
+				<span className="pending-task-label">{task.label}</span>
+				<span className="pending-task-info">{task.info || ''}</span>
 			</div>
-			<progress max="100" value={this.state.progress}></progress>
+			<progress max="100" ref="progressBar"></progress>
 		</li>;
 	}
 });
