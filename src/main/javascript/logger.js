@@ -27,6 +27,7 @@ function LoggerFactory(name) {
 module.exports = LoggerFactory;
 
 var logger = new Logger('main');
+
 var navigator = window.navigator;
 logger.info('Browser engine: ' + navigator.product + ' ' + navigator.appVersion
 	+ "\n        Platform: " + navigator.platform

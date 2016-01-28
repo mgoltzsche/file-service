@@ -1,10 +1,6 @@
 var log = require('./logger.js')('main');
 var WebDavUI = require('./webdav-ui.js');
-var domready = require("domready");
-
-if (typeof function() {}.bind != 'function') {
-	alert("This application won't work with this browser. Please get a new browser!");
-}
+var domready = require('domready');
 
 var requiredSupport = function(name, obj) {
 	if (typeof obj === 'undefined')
@@ -12,9 +8,10 @@ var requiredSupport = function(name, obj) {
 };
 
 domready(function () {
+	requiredSupport('XMLHttpRequest', XMLHttpRequest);
+	requiredSupport('Function.bind', Function.prototype.bind);
+
 	try {
-		requiredSupport('XMLHttpRequest', XMLHttpRequest);
-		requiredSupport('Function.bind', Function.prototype.bind);
 		requiredSupport('Web Worker', Worker);
 		WebDavUI(document.getElementById('webdav-ui'), '/files');
 	} catch(e) {

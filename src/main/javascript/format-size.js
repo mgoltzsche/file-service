@@ -1,16 +1,19 @@
 var sizeKB = 1000;
 var sizeMB = 1000 * 1000;
 var sizeGB = 1000 * 1000 * 1000;
+var fmtFloat = function(v) {
+	return parseFloat(v.toFixed(1) + '');
+};
 
 module.exports = function(size) {
 	size = size || 0;
-	
+
 	if (size >= sizeGB) {
-		return (size / sizeGB).toFixed(1) + ' GB';
+		return fmtFloat(size / sizeGB) + ' GB';
 	} else if (size >= sizeMB) {
-		return (size / sizeMB).toFixed(1) + ' MB';
+		return fmtFloat(size / sizeMB) + ' MB';
 	} else if (size >= sizeKB) {
-		return (size / sizeKB).toFixed(1) + ' KB';
+		return fmtFloat(size / sizeKB) + ' KB';
 	} else {
 		return size + ' B';
 	}

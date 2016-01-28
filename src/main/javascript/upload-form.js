@@ -53,12 +53,12 @@ var UploadForm = React.createClass({
 					this.removePendingUpload(upload);
 					this.props.onUploadComplete(upload);
 				}.bind(this, upload),
-				function(loaded, total) {
-					this.onProgressChange(total === 0 ? 0 : loaded / total);
-				}.bind(upload),
 				function(upload) {
 					this.removePendingUpload(upload);
 					alert('Failed to upload ' + upload.label);
+				}.bind(this, upload),
+				function(upload, loaded, total) {
+					this.refs.uploads.setProgress(upload.id, loaded, total);
 				}.bind(this, upload));
 			}
 
@@ -80,7 +80,7 @@ var UploadForm = React.createClass({
 				<div>
 					<input type="file" onChange={this.handleFilesAdded} multiple />
 				</div>
-				<PendingTasks tasks={this.state.pendingUploads} />
+				<PendingTasks tasks={this.state.pendingUploads} ref="uploads" />
 			</form>
 		</section>
 	}
@@ -90,10 +90,16 @@ var PendingTasks = React.createClass({
 	getDefaultProps: function() {
 		return {tasks: []};
 	},
+	setProgress: function(taskId, done, total) {
+		var taskView = this.refs[taskId];
+
+		if (taskView)
+			taskView.setProgress(done, total);
+	},
 	render: function() {
 		return <ul className="pending-tasks">
 			{this.props.tasks.map(function(task) {
-				return <PendingTask task={task} key={task.id} />
+				return <PendingTask task={task} key={task.id} ref={task.id} />
 			})}
 		</ul>;
 	}
@@ -103,24 +109,21 @@ var PendingTask = React.createClass({
 	getInitialState: function() {
 		return {progress: 0};
 	},
-	componentDidMount: function() {
-		this.refs.progressBar.value = this.state.progress = 0;
+	setProgress: function(done, total) {
+		var progress = total === 0 ? 0 : done / total * 100;
+
+		if (progress !== this.state.progress)
+			this.refs.progressBar.value = this.state.progress = progress;
 	},
 	render: function() {
 		var task = this.props.task;
-		task.onProgressChange = function(progress) {
-			progress *= 100;
-
-			if (progress !== this.state.progress)
-				this.refs.progressBar.value = this.state.progress = progress;
-		}.bind(this);
 
 		return <li className="pending-task" key={task.id}>
 			<div>
 				<span className="pending-task-label">{task.label}</span>
 				<span className="pending-task-info">{task.info || ''}</span>
 			</div>
-			<progress max="100" ref="progressBar"></progress>
+			<progress max="100" value="0" ref="progressBar"></progress>
 		</li>;
 	}
 });
