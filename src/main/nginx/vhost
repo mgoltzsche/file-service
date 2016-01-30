@@ -1,5 +1,15 @@
 server {
-	listen      80;
+	listen 80;
+	server_name robin.algorythm.de;
+	root        /var/www/robin;
+
+	passenger_enabled on;
+	rails_env production;
+
+	return 301 https://$server_name$request_uri;
+}
+
+server {
 	listen      443 ssl;
 	server_name robin.algorythm.de;
 	root        /var/www/robin;
