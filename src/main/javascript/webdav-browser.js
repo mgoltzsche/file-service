@@ -2,7 +2,6 @@ var log = require('./logger.js')('WebDavBrowser');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var WebDavClient = require('./webdav-client.js');
-var UploadForm = require('./upload-form.js');
 var formatSize = require('./format-size.js');
 
 var itemName = function(href) {
@@ -19,6 +18,7 @@ var WebDavBrowser = React.createClass({
 			rootURL: '',
 			client: new WebDavClient(),
 			className: '',
+			controls: '',
 			getPreviewHref: function(item) {return '';},
 			onSelectFile: function(href) {},
 			onSelectCollection: function(href) {},
@@ -61,9 +61,6 @@ var WebDavBrowser = React.createClass({
 				this.update();
 			}.bind(this));
 		}
-	},
-	handleUploadComplete: function(upload) {
-		this.update();
 	},
 	select: function(href) {
 		var fileSelected = false;
@@ -152,13 +149,13 @@ var WebDavBrowser = React.createClass({
 				<WebDavBreadcrumbs path={this.state.collectionHref}
 					onSelect={this.select}/>
 				<div className="webdav-controls">
+					{this.props.controls}
 					<a href={'#' + this.state.collectionHref} className="button dav dav-refresh" onClick={this.handleRefresh} title="refresh"></a>
 				</div>
 			</header>
 			<ul className="webdav-collection-content">
 				{collectionItems}
 			</ul>
-			<UploadForm baseURL={baseURL} onUploadComplete={this.handleUploadComplete} client={this.props.client} />
 		</article>
 	}
 });

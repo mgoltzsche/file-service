@@ -5,6 +5,8 @@ var WebDavClient = require('./webdav-client.js');
 var WebDavBrowser = require('./webdav-browser.js');
 var location = require('./hash-location.js');
 var MediaDisplay = require('./media-display.js');
+var UploadButton = require('./upload-button.js');
+var PendingTasks = require('./pending-tasks.js');
 
 var WebDavUI = React.createClass({
 	_imageHrefPattern: /^\/files\/(.*?)\.(jpg|jpeg|png|gif)$/i,
@@ -17,10 +19,12 @@ var WebDavUI = React.createClass({
 	getInitialState: function() {
 		return {
 			media: [],
-			currentMediaHref: null
+			currentMediaHref: null,
+			currentCollectionHref: ''
 		}
 	},
 	componentDidMount: function() {
+		this.state.currentCollectionHref = this.props.rootURL;
 		this._locationListener = function(hash) {
 			this.refs.browser.select(hash);
 		}.bind(this);
@@ -69,7 +73,9 @@ var WebDavUI = React.createClass({
 	},
 	handleCollectionSelect: function(href) {
 		location.hash(href);
+		this.state.currentCollectionHref = href;
 		this.refs.mediaDisplay.hide();
+		this.refs.uploadButton.setBaseURL(this.state.currentCollectionHref);
 		document.title = href;
 	},
 	handleMediaDisplayed: function(media, index) {
@@ -92,6 +98,20 @@ var WebDavUI = React.createClass({
 			this.refs.mediaDisplay.displayMedia(this.state.media, index);
 		}
 	},
+	handleUploadStarted: function(upload) {
+		this.refs.tasks.addTask(upload);
+	},
+	handleUploadSuccess: function(upload) {
+		this.refs.browser.update();
+		this.refs.tasks.removeTask(upload.id);
+	},
+	handleUploadError: function(upload, status) {
+		alert('Upload ' + upload.label + ' failed with status code ' + status);
+		this.refs.tasks.removeTask(upload.id);
+	},
+	handleUploadProgress: function(upload, loaded, total) {
+		this.refs.tasks.setProgress(upload.id, loaded, total);
+	},
 	getPreviewHref: function(item) {
 		if (this._imageHrefPattern.test(item.href))
 			return this.getScaledImageHref(item.href, 27, 23);
@@ -103,6 +123,13 @@ var WebDavUI = React.createClass({
 		return this.getScaledImageHref(href, maxWidth, maxHeight);
 	},
 	render: function() {
+		var controls = <UploadButton baseURL={this.state.baseURL}
+				client={this.props.client}
+				onStarted={this.handleUploadStarted}
+				onSuccess={this.handleUploadSuccess}
+				onError={this.handleUploadError}
+				onProgress={this.handleUploadProgress}
+				ref="uploadButton" />;
 		return <div>
 			<MediaDisplay media={this.state.media}
 				onDisplay={this.handleMediaDisplayed}
@@ -111,11 +138,13 @@ var WebDavUI = React.createClass({
 				ref="mediaDisplay" />
 			<WebDavBrowser rootURL={this.props.rootURL}
 				client={this.props.client}
+				controls={controls}
 				onSelectFile={this.handleFileSelect}
 				onSelectCollection={this.handleCollectionSelect}
 				onCollectionLoaded={this.handleCollectionLoaded}
 				getPreviewHref={this.getPreviewHref}
 				ref="browser" />
+			<PendingTasks ref="tasks" />
 		</div>
 	}
 });

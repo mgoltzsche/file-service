@@ -6,3 +6,12 @@
 	background: $actionColor;
 	@include border-radius($borderRadius);
 }
+
+.upload-button {
+	display: inline-block;
+	@extend .dav, .dav-plus;
+
+	form {
+		display: none;
+	}
+}
