@@ -145,11 +145,10 @@ var Dialog = React.createClass({
 	},
 	show: function() {
 		if (!this._show) {
-			log.debug('Dialog.show');
+			log.debug('show');
 			this._show = true;
 			modalOverlay.addClickListener(this._modalOverlayClickListener);
 			modalOverlay.show();
-//			this.setPreferredContentSize(this.props.prefWidth, this.props.prefHeight, this.props.resizeProportional);
 			this.updateClassName();
 			return true;
 		}
@@ -158,7 +157,7 @@ var Dialog = React.createClass({
 	},
 	hide: function() {
 		if (this._show) {
-			log.debug('Dialog.hide');
+			log.debug('hide');
 			// Set state before listener invocation to guarantee method is not executed reentrant
 			this._show = false;
 

@@ -138,7 +138,9 @@ var MediaDisplay = React.createClass({
 			return;
 		}
 
-		if (this.state.display !== this.displays.hidden && media === this.state.media && index === this.state.index)
+		var active = this.state.display !== this.displays.hidden;
+
+		if (active && media === this.state.media && index === this.state.index)
 			return;
 
 		if (typeof index === 'undefined')
@@ -153,6 +155,9 @@ var MediaDisplay = React.createClass({
 
 		this.state.media = media;
 		this.state.index = index;
+
+		if (!active)
+			this.refs.dialog.setPreferredContentSize(100, 100, false);
 
 		this._update();
 		this.refs.dialog.show();

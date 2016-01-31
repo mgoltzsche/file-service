@@ -51,6 +51,7 @@
 	}
 	.media-display-download .download-display {
 		display: inline-block;
+		@extend .dav, .dav-download;
 	}
 }
 
