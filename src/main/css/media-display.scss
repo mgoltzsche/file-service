@@ -61,7 +61,7 @@
 	.progress-indicator {
 		display: none;
 		@extend .dav, .dav-spinner;
-		padding: 10px;
+		padding: 20px;
 		font-size: 50px;
 	}
 	&.loading {
@@ -70,6 +70,32 @@
 		}
 		.progress-indicator {
 			display: block;
+		}
+	}
+}
+
+.player {
+	&.playing {
+		cursor: default;
+
+		video {
+			display: block;
+		}
+	}
+	&.paused {
+		color: $actionColor;
+		cursor: pointer;
+		@extend .dav, .dav-play-circle;
+		&:before {
+			font-size: 70px;
+			width: 100%;
+			position: relative;
+			top: 50%;
+			margin: -35px 0 0 0;
+		}
+
+		video {	
+			display: none;
 		}
 	}
 }

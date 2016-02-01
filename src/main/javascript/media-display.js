@@ -3,6 +3,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var Dialog = require('./dialog.js');
 var ImageLoader = require('./image-loader.js');
+var Player = require('./player.js');
 
 var MediaDisplay = React.createClass({
 	getDefaultProps: function() {
@@ -62,16 +63,6 @@ var MediaDisplay = React.createClass({
 			}
 		}
 	},
-	handleMediaError: function(e) {
-		if (this.state.streamHref !== null) {
-			// TODO: Fallback to iframe display
-			/*log.debug('Media error for ' + this.state.streamHref + '. Falling back to iframe display');
-			this.state.displayType = 'iframe';
-			this.state.iframeHref = this.state.streamHref;
-			this.state.streamHref = null;
-			this.setState(this.state);*/
-		}
-	},
 	handleClose: function() {
 		this.props.onClose(this.state.media, this.state.index);
 	},
@@ -101,21 +92,11 @@ var MediaDisplay = React.createClass({
 		stream: {
 			name: 'stream',
 			show: function(self, media) {
-				self.refs.stream.src = self.props.rewriteStreamHref(media.href);
-				self.refs.stream.load();
-
-				if (self.refs.stream.error) {
-					log.debug('Video element error', self.refs.stream.error);
-				}
-
 				self.refs.dialog.setPreferredContentSize(720, 480);
+				self.refs.stream.show(self.props.rewriteStreamHref(media.href));
 			},
 			clear: function(self) {
-				try {
-					self.refs.stream.pause();
-				} catch(e) {
-					log.error('Cannot pause video element', e);
-				}
+				self.refs.stream.hide();
 			},
 			onResize: function(self, maxWidth, maxHeight) {}
 		},
@@ -272,9 +253,7 @@ var MediaDisplay = React.createClass({
 				ref="dialog">
 			<div ref="container">
 				<ImageLoader className="image-display" onLoad={this.handleImageLoaded} ref="image" />
-				<video className="stream-display" width="100%" height="100%" controls onError={this.handleMediaError} ref="stream">
-					<span>Your browser does not support the video element. Go get a new Browser!</span>
-				</video>
+				<Player className="stream-display" width="100%" height="100%" ref="stream" />
 				<iframe className="iframe-display" width="100%" height="100%" ref="iframe" />
 				<a className="download-display" title="Download" ref="download">Download</a>
 			</div>
