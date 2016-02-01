@@ -179,7 +179,7 @@ var Dialog = React.createClass({
 	setPreferredContentSize: function(width, height, resizeProportional) {
 		var proportionalDefined = typeof resizeProportional !== 'undefined';
 
-		if (this._prefWidth !== width || this._prefWidth !== height ||
+		if (this._prefWidth !== width || this._prefHeight !== height ||
 				proportionalDefined && this._resizeProportional !== resizeProportional) {
 			this._prefWidth = width || 0;
 			this._prefHeight = height || 0;
@@ -192,7 +192,7 @@ var Dialog = React.createClass({
 		}
 	},
 	resize: function() {
-		log.debug('Resize dialog: ' + this._prefWidth + 'x' + this._prefHeight);
+		log.debug('Resize to ' + this._prefWidth + 'x' + this._prefHeight);
 		var contentStyle = this.refs.content.style;
 		var vpWidth = window.innerWidth;
 		var vpHeight = window.innerHeight;
@@ -237,7 +237,7 @@ var Dialog = React.createClass({
 
 		this._maxContentWidth = maxWidth;
 		this._maxContentHeight = maxHeight;
-		this.props.onResize();
+		this.props.onResize(maxWidth, maxHeight);
 	},
 	getMaxContentWidth: function() {
 		return this._maxContentWidth;
