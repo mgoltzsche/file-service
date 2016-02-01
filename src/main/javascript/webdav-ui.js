@@ -13,7 +13,12 @@ var WebDavUI = React.createClass({
 	getDefaultProps: function() {
 		return {
 			rootURL: '/',
-			client: new WebDavClient()
+			client: new WebDavClient(),
+			imageResolutions: [
+				[1858, 792], // Workstation/Laptop resolution without padding
+				[378, 611], // IPhone 6 resolution without padding
+				[298, 290] // lowest possible solution
+			]
 		};
 	},
 	getInitialState: function() {
@@ -112,6 +117,34 @@ var WebDavUI = React.createClass({
 	handleUploadProgress: function(upload, loaded, total) {
 		this.refs.tasks.setProgress(upload.id, loaded, total);
 	},
+	_matchImageResolution: function(maxWidth, maxHeight) {
+		var r, resolutions = this.props.imageResolutions;
+
+		for (var i = 0; i < resolutions.length; i++) {
+			r = resolutions[i];
+			var width = r[0], height = r[1];
+
+			if (width <= maxWidth && height <= maxHeight) {
+				if (i > 0) {
+					var last = resolutions[i - 1];
+					var distLast = this._resolutionDistance(last[0], last[1], maxWidth, maxHeight) * 1.5;
+					var distThis = this._resolutionDistance(height, width, maxWidth, maxHeight);
+
+					return distThis < distLast ? r : last;
+				} else {
+					return r;
+				}
+			}
+		}
+
+		return r;
+	},
+	_resolutionDistance: function(width1, height1, width2, height2) {
+		var dx = width1 - width2;
+		var dy = height1 - height2;
+
+		return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+	},
 	getPreviewHref: function(item) {
 		if (this._imageHrefPattern.test(item.href))
 			return this.getScaledImageHref(item.href, 27, 23);
@@ -119,8 +152,9 @@ var WebDavUI = React.createClass({
 		return null;
 	},
 	rewriteImageHref: function(href, maxWidth, maxHeight) {
-		// TODO: Limit possible image resolutions
-		return this.getScaledImageHref(href, maxWidth, maxHeight);
+		var r = this._matchImageResolution(maxWidth, maxHeight);
+
+		return this.getScaledImageHref(href, r[0], r[1]);
 	},
 	render: function() {
 		var controls = <UploadButton baseURL={this.state.baseURL}

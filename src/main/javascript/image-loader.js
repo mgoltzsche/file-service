@@ -54,7 +54,6 @@ var ImageLoader = React.createClass({
 			return;
 		}
 
-		log.debug('loading: ' + src);
 		var img = this._preloadElement;
 		img.src = this.state.src = src;
 

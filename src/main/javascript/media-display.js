@@ -81,11 +81,21 @@ var MediaDisplay = React.createClass({
 			show: function(self, media) {
 				var maxWidth = self.refs.dialog.getMaxContentWidth();
 				var maxHeight = self.refs.dialog.getMaxContentHeight();
-				href = self.props.rewriteImageHref(media.href, maxWidth, maxHeight);
+				var href = self.props.rewriteImageHref(media.href, maxWidth, maxHeight);
+				self._lastRewrittenImageHref = href;
 				self.refs.image.showImage(href);
 			},
 			clear: function(self) {
 				self.refs.image.showImage();
+			},
+			onResize: function(self, maxWidth, maxHeight) {
+				var media = self.state.media[self.state.index];
+				var href = self.props.rewriteImageHref(media.href, maxWidth, maxHeight);
+
+				if (href !== self._lastRewrittenImageHref) {
+					self._lastRewrittenImageHref = href;
+					self.refs.image.showImage(href);
+				}
 			}
 		},
 		stream: {
@@ -106,16 +116,22 @@ var MediaDisplay = React.createClass({
 				} catch(e) {
 					log.error('Cannot pause video element', e);
 				}
-			}
+			},
+			onResize: function(self, maxWidth, maxHeight) {}
 		},
 		iframe: {
 			name: 'iframe',
 			show: function(self, media) {
+				var maxWidth = self.refs.dialog.getMaxContentWidth();
+				var maxHeight = self.refs.dialog.getMaxContentHeight();
 				self.refs.iframe.src = media.href;
-				self.refs.dialog.setPreferredContentSize(1024, 1024, false);
+				self.refs.dialog.setPreferredContentSize(maxWidth, maxHeight, false);
 			},
 			clear: function(self) {
 				self.refs.iframe.src = '';
+			},
+			onResize: function(self, maxWidth, maxHeight) {
+				self.refs.dialog.setPreferredContentSize(maxWidth, maxHeight, false);
 			}
 		},
 		download: {
@@ -124,12 +140,14 @@ var MediaDisplay = React.createClass({
 				self.refs.download.href = media.href;
 				self.refs.dialog.setPreferredContentSize(320, 240);
 			},
-			clear: function() {}
+			clear: function() {},
+			onResize: function() {}
 		},
 		hidden: {
 			name: 'hidden',
 			show: function() {},
-			clear: function() {}
+			clear: function() {},
+			onResize: function() {}
 		}
 	},
 	displayMedia: function(media, index) {
@@ -193,12 +211,12 @@ var MediaDisplay = React.createClass({
 		this.refs.label.title = href;
 		this.refs.label.innerHTML = label;
 
-		this._updateControls();
-		this.refs.container.className = 'media-display-' + this.state.display.name + ' ' + this.props.className;
-	},
-	_updateControls: function() {
+		// Update controls
 		this.refs.previous.className = 'previous' + (this.state.index > 0 ? '' : ' hidden');
 		this.refs.next.className = 'next' + (this.state.index < this.state.media.length - 1 ? '' : ' hidden');
+		
+		// Show display element
+		this.refs.container.className = 'media-display-' + this.state.display.name + ' ' + this.props.className;
 	},
 	hide: function() {
 		if (this.state.display !== this.displays.hidden) {
@@ -207,6 +225,9 @@ var MediaDisplay = React.createClass({
 			this.refs.dialog.hide();
 			document.removeEventListener('keyup', this._keyupListener);
 		}
+	},
+	handleResize: function(maxWidth, maxHeight) {
+		this.state.display.onResize(this, maxWidth, maxHeight);
 	},
 	handlePrevious: function(e) {
 		e.preventDefault();
@@ -241,7 +262,14 @@ var MediaDisplay = React.createClass({
 			<a ref="next" title="next" onClick={this.handleNext}></a>
 		</div>;
 
-		return <Dialog className={'media-display' + (this.props.className ? ' ' + this.props.className : '')} footer={footer} onClose={this.handleClose} prefWidth={this.state.prefWidth} prefHeight={this.state.prefHeight} resizeProportional={true} ref="dialog">
+		return <Dialog className={'media-display' + (this.props.className ? ' ' + this.props.className : '')}
+				footer={footer}
+				onResize={this.handleResize}
+				onClose={this.handleClose}
+				prefWidth={this.state.prefWidth}
+				prefHeight={this.state.prefHeight}
+				resizeProportional={true}
+				ref="dialog">
 			<div ref="container">
 				<ImageLoader className="image-display" onLoad={this.handleImageLoaded} ref="image" />
 				<video className="stream-display" width="100%" height="100%" controls onError={this.handleMediaError} ref="stream">
