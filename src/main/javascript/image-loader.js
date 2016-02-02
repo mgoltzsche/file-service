@@ -18,34 +18,39 @@ var ImageLoader = React.createClass({
 	},
 	componentDidMount: function() {
 		this._preloadElement = document.createElement('img');
-		this._loadListener = function(e) {
-			this._removePreloadListeners();
-			this._onImageLoaded(e.target.src, e.target.naturalWidth, e.target.naturalHeight);
-		}.bind(this);
-		this._errorListener = function(e) {
-			log.debug('Failed to load image: ' + e.target.src);
-			this._removePreloadListeners();
-			this.refs.image.src = 'error.jpg';
-			this.setLoading(false);
-			this.props.onLoadFailed(e.target.src);
-		}.bind(this);
-		this._removePreloadListeners = function() {
-			this._preloadElement.removeEventListener('load', this._loadListener);
-			this._preloadElement.removeEventListener('error', this._errorListener);
-		}.bind(this);
-
-		// Load image
-		this.showImage(this.props.src);
+		this.showImage(this.props.src); // Load image
 	},
 	componentWillUpdate: function(nextProps) {
 		if (this.props.src !== nextProps.src)
 			this.showImage(nextProps.src);
 	},
 	_onImageLoaded: function(href, width, height) {
-		log.debug('loaded: ' + href + ' (' + width + 'x' + height + ')');
-		this.refs.image.src = href;
-		this.setLoading(false);
-		this.props.onLoad(href, width, height);
+		if (this.state.src === href) {
+			log.debug('loaded: ' + href + ' (' + width + 'x' + height + ')');
+			this.refs.image.src = href;
+			this.setLoading(false);
+			this.props.onLoad(href, width, height);
+		}
+	},
+	_removePreloadListeners: function(listeners) {
+		this._preloadElement.removeEventListener('load', listeners.onLoad);
+		this._preloadElement.removeEventListener('error', listeners.onError);
+	},
+	_onLoad: function(listeners, e) {
+		this._removePreloadListeners(listeners);
+
+		if (listeners.src === this.state.src)
+			this._onImageLoaded(listeners.src, e.target.naturalWidth, e.target.naturalHeight);
+	},
+	_onError: function(listeners, e) {
+		log.debug('Failed to load image: ' + listeners.src);
+		this._removePreloadListeners(listeners);
+
+		if (listeners.src === this.state.src) {
+			this.refs.image.src = 'error.jpg';
+			this.setLoading(false);
+			this.props.onLoadFailed(listeners.src);
+		}
 	},
 	showImage: function(src) {
 		if (!src) {
@@ -63,8 +68,11 @@ var ImageLoader = React.createClass({
 			this._onImageLoaded(src, img.naturalWidth, img.naturalHeight);
 		} else {
 			this.setLoading(true);
-			img.addEventListener('load', this._loadListener);
-			img.addEventListener('error', this._errorListener);
+			var listeners = {src: src};
+			listeners.onLoad = this._onLoad.bind(this, listeners);
+			listeners.onError = this._onError.bind(this, listeners);
+			img.addEventListener('load', listeners.onLoad);
+			img.addEventListener('error', listeners.onError);
 		}
 	},
 	setLoading: function(loading) {
@@ -77,7 +85,7 @@ var ImageLoader = React.createClass({
 	render: function() {
 		log.debug('RENDER IMAGE');
 		return <div className={this.getClassName()} ref="container">
-			<i className="progress-indicator"> </i>
+			<i className="progress-indicator"></i>
 			<img ref="image" />
 		</div>
 	}
