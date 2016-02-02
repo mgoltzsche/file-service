@@ -12,5 +12,5 @@ fi
 rsync "target/webdav-client-$BUILD_VERSION-web.zip" $HOST:/home/max/webdav-client.zip &&
 ssh $HOST "cd /tmp && rm -rf webdav-client-$BUILD_VERSION; \
 	unzip /home/max/webdav-client.zip && \
-	rm -rf /var/www/robin/ui && \
-	mv webdav-client-$BUILD_VERSION /var/www/robin/ui"
+	rm -rf /var/www/robin/web/ui && \
+	mv webdav-client-$BUILD_VERSION /var/www/robin/web/ui"
