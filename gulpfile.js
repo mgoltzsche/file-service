@@ -1,5 +1,6 @@
 var pkg = require('./package.json');
 var gulp = require('gulp');
+var rename = require('gulp-rename');
 var babel = require('gulp-babel');
 var jshint = require('gulp-jshint');
 var sass = require('gulp-sass');
@@ -35,7 +36,8 @@ gulp.task('sass', ['clean', 'iconfont'], function() {
 		.pipe(sourcemaps.init())
 		.pipe(sass({outputStyle: 'compressed'}))
 		.pipe(sourcemaps.write())
-		.pipe(gulp.dest('${basedir}/target/web-distribution/css'));
+		.pipe(rename('webdav-client-' + pkg.version + '.min.css'))
+		.pipe(gulp.dest('${basedir}/target/web-distribution/resources/css'));
 });
 
 gulp.task('browserify', ['clean', 'lint'], function() {
@@ -45,7 +47,7 @@ gulp.task('browserify', ['clean', 'lint'], function() {
 		.pipe(source(pkg.name + '-' + pkg.version + '.min.js')) // converts to vinyl src with name
 		.pipe(buffer())                     // converts to vinyl buffer obj
 		.pipe(uglify())
-		.pipe(gulp.dest('${basedir}/target/web-distribution/js'));
+		.pipe(gulp.dest('${basedir}/target/web-distribution/resources/js'));
 });
 
 gulp.task('iconfont', function(){
@@ -60,13 +62,16 @@ gulp.task('iconfont', function(){
 			gulp.src('${basedir}/src/main/css-templates/_icons.generated.scss')
 			.pipe(consolidate('lodash', {
 				glyphs: glyphs,
-				fontName: fontName,
+				fontName: fontName + '-' + pkg.version,
 				fontPath: '../fonts/',
 				className: 'dav'
 			}))
 			.pipe(gulp.dest('css'));
 		})
-		.pipe(gulp.dest('${basedir}/target/web-distribution/fonts'));
+		.pipe(rename(function(path) {
+			path.basename += '-' + pkg.version;
+		}))
+		.pipe(gulp.dest('${basedir}/target/web-distribution/resources/fonts'));
 });
 
 gulp.task('lint', function() {
