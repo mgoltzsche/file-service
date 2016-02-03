@@ -108,11 +108,10 @@
 				line-height: 1.3em;
 
 				&:visited {
-					color: lighten($actionColor, 10%);
+					color: lighten($actionColor, $colorModPercent/2);
 				}
-
-				&:active {
-					color: darken($actionColor, 20%);
+				&:hover, &:focus, &:active {
+					color: darken($actionColor, $colorModPercent);
 				}
 			}
 

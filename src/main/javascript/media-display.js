@@ -119,7 +119,7 @@ var MediaDisplay = React.createClass({
 			name: 'download',
 			show: function(self, media) {
 				self.refs.download.href = media.href;
-				self.refs.dialog.setPreferredContentSize(320, 240);
+				self.refs.dialog.setPreferredContentSize(320, 240, true);
 			},
 			clear: function() {},
 			onResize: function() {}
@@ -255,7 +255,7 @@ var MediaDisplay = React.createClass({
 				<ImageLoader className="image-display" onLoad={this.handleImageLoaded} ref="image" />
 				<Player className="stream-display" width="100%" height="100%" ref="stream" />
 				<iframe className="iframe-display" width="100%" height="100%" ref="iframe" />
-				<a className="download-display" title="Download" ref="download">Download</a>
+				<a className="button primary download-display" title="Download" ref="download">Download</a>
 			</div>
 		</Dialog>
 	}

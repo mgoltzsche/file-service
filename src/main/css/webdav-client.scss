@@ -6,6 +6,7 @@ $textColor: #333333;
 $actionColor: #3377cc;
 $borderRadius: 3px;
 $margin: 10px;
+$colorModPercent: 20%;
 
 @import "mixins.scss";
 @import "buttons.scss";
@@ -31,4 +32,10 @@ body {
 a {
 	text-decoration: none;
 	color: $actionColor;
+	outline: 0;
+
+	&:hover, &:focus, &:active {
+		color: darken($actionColor, $colorModPercent);
+		text-decoration: underline;
+	}
 }

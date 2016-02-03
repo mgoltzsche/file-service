@@ -2,9 +2,27 @@
 	display: inline-block;
 	margin: $margin/2 0 $margin/2 $margin;
 	padding: $margin/2;
-	color: $backgroundColor;
-	background: $actionColor;
+	color: $actionColor;
+	background: $borderColorLight;
+	border: 1px solid darken($borderColorLight, $colorModPercent / 2);
 	@include border-radius($borderRadius);
+	outline: 0;
+
+	&:hover, &:focus, &:active {
+		color: darken($actionColor, $colorModPercent);
+		border: 1px solid darken($actionColor, $colorModPercent);
+		text-decoration: none;
+	}
+
+	&.primary {
+		color: $backgroundColor;
+		background: $actionColor;
+		border: 1px solid darken($actionColor, $colorModPercent);
+
+		&:hover, &:focus, &:active {
+			background: darken($actionColor, $colorModPercent / 2);
+		}
+	}
 }
 
 .upload-button {

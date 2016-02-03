@@ -1,5 +1,37 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
+var Dialog = require('./dialog.js');
+
+var PendingTasksDialog = React.createClass({
+	getDefaultProps: function() {
+		return {tasks: [], onClose: function() {}};
+	},
+	show: function() {
+		this.refs.dialog.show();
+	},
+	addTask: function(task) {
+		this.refs.taskList.addTask(task);
+	},
+	removeTask: function(taskId) {
+		this.refs.taskList.removeTask(taskId);
+	},
+	setProgress: function(taskId, done, total) {
+		this.refs.taskList.setProgress(taskId, done, total);
+	},
+	handleClose: function() {
+		this.props.onClose();
+	},
+	render: function() {
+		return <Dialog className={'pending-tasks-dialog' + (this.props.className ? ' ' + this.props.className : '')}
+				onClose={this.handleClose}
+				prefWidth="300"
+				prefHeight="400"
+				resizeProportional={false}
+				ref="dialog">
+			<PendingTasks tasks={this.props.tasks} ref="taskList" />
+		</Dialog>;
+	}
+});
 
 var PendingTasks = React.createClass({
 	getDefaultProps: function() {
@@ -32,10 +64,10 @@ var PendingTasks = React.createClass({
 	},
 	render: function() {
 		return <ul className="pending-tasks">
-			{this.state.tasks.map(function(task) {
-				return <PendingTask task={task} key={task.id} ref={task.id} />
-			})}
-		</ul>;
+				{this.state.tasks.map(function(task) {
+					return <PendingTask task={task} key={task.id} ref={task.id} />
+				})}
+			</ul>
 	}
 });
 
