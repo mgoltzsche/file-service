@@ -145,13 +145,10 @@ var WebDavBrowser = React.createClass({
 		}.bind(this));
 		return <article className={className}>
 			<header className="webdav-browser-header">
-				<div className="webdav-item-icon" ref="icon"></div>
+				<i className="webdav-item-icon" ref="icon"></i>
 				<WebDavBreadcrumbs path={this.state.collectionHref}
 					onSelect={this.select}/>
-				<div className="webdav-controls">
-					{this.props.controls}
-					<a href={'#' + this.state.collectionHref} className="button dav dav-refresh" onClick={this.handleRefresh} title="refresh"></a>
-				</div>
+				{this.props.header}
 			</header>
 			<ul className="webdav-collection-content">
 				{collectionItems}

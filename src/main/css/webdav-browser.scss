@@ -76,6 +76,8 @@
 			}
 
 			.webdav-item-icon {
+				cursor: pointer;
+
 				img {
 					margin: 0 auto;
 					display: none;
@@ -108,10 +110,11 @@
 				line-height: 1.3em;
 
 				&:visited {
-					color: lighten($actionColor, $colorModPercent/2);
+					color: lighten($actionColor, $colorModPercent / 2);
 				}
-				&:hover, &:focus, &:active {
-					color: darken($actionColor, $colorModPercent);
+
+				&:hover {
+					color: $actionColor;
 				}
 			}
 
@@ -121,7 +124,7 @@
 
 			.webdav-item-size {
 				padding: 0 $margin;
-				color: lighten($textColor, 30%);
+				color: lighten($textColor, $colorModPercent);
 			}
 		}
 	}

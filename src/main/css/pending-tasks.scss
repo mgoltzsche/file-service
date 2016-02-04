@@ -1,0 +1,40 @@
+.pending-tasks-list {
+
+	.total-progress-bar {
+		display: block;
+		width: 90%;
+		margin: 0 auto;
+		padding: 0 0 $margin 0;
+	}
+
+	ul {
+		width: 100%;
+		list-style-type: none;
+	}
+
+	ul, li {
+		margin: 0;
+		padding: 0;
+	}
+
+	li {
+		padding: $margin;
+		border-bottom: 1px solid $borderColorLight;
+
+		.pending-task-label {
+			display: block;
+			white-space: nowrap;
+			text-overflow: ellipse;
+		}
+		.pending-task-info {
+			float: right;
+		}
+		progress {
+			display: block;
+		}
+
+		&:last-child {
+			border-bottom: none;
+		}
+	}
+}

@@ -1,27 +1,54 @@
 .button {
-	display: inline-block;
-	margin: $margin/2 0 $margin/2 $margin;
-	padding: $margin/2;
-	color: $actionColor;
-	background: $borderColorLight;
-	border: 1px solid darken($borderColorLight, $colorModPercent / 2);
-	@include border-radius($borderRadius);
-	outline: 0;
+	&, &:visited {
+		display: inline-block;
+		margin: $margin/2 0 $margin/2 $margin;
+		padding: $margin/2;
+		color: $actionColor;
+		background: $borderColorLight;
+		border: 1px solid darken($borderColorLight, $colorModPercent / 2);
+		@include border-radius($borderRadius);
+		outline: 0;
+	}
 
-	&:hover, &:focus, &:active {
-		color: darken($actionColor, $colorModPercent);
-		border: 1px solid darken($actionColor, $colorModPercent);
+	&, &:focus, &:hover, &:active, &:visited {
 		text-decoration: none;
 	}
 
-	&.primary {
+	&:hover, &:active {
 		color: $backgroundColor;
 		background: $actionColor;
-		border: 1px solid darken($actionColor, $colorModPercent);
+		border: 1px solid $actionColor;
+	}
 
-		&:hover, &:focus, &:active {
-			background: darken($actionColor, $colorModPercent / 2);
+	&:focus {
+		border: 1px solid $actionColor;
+	}
+
+	&.primary {
+		&, &:visited {
+			color: $backgroundColor;
+			background: $actionColor;
+			border: 1px solid $actionColor;
 		}
+
+		&:hover, &:active {
+			text-decoration: underline;
+
+			&:before {
+				text-decoration: none;
+			}
+		}
+
+		&:focus {
+			border: 1px solid $textColor;
+		}
+		/*&:hover, &:active, &:focus {
+			text-decoration: underline;
+
+			&:before {
+				text-decoration: none;
+			}
+		}*/
 	}
 }
 

@@ -6,7 +6,7 @@ var WebDavBrowser = require('./webdav-browser.js');
 var location = require('./hash-location.js');
 var MediaDisplay = require('./media-display.js');
 var UploadButton = require('./upload-button.js');
-var PendingTasks = require('./pending-tasks.js');
+var Progress = require('./pending-tasks.js');
 
 var WebDavUI = React.createClass({
 	_imageHrefPattern: /^\/files\/(.*?)\.(jpg|jpeg|png|gif)$/i,
@@ -25,7 +25,7 @@ var WebDavUI = React.createClass({
 		return {
 			media: [],
 			currentMediaHref: null,
-			currentCollectionHref: ''
+			currentCollectionHref: null
 		}
 	},
 	componentDidMount: function() {
@@ -103,6 +103,9 @@ var WebDavUI = React.createClass({
 			this.refs.mediaDisplay.displayMedia(this.state.media, index);
 		}
 	},
+	handleRefresh: function() {
+		this.refs.browser.update();
+	},
 	handleUploadStarted: function(upload) {
 		this.refs.tasks.addTask(upload);
 	},
@@ -157,13 +160,17 @@ var WebDavUI = React.createClass({
 		return this.getScaledImageHref(href, r[0], r[1]);
 	},
 	render: function() {
-		var controls = <UploadButton baseURL={this.state.baseURL}
+		var header = <div className="webdav-controls">
+			<Progress ref="tasks" />
+			<UploadButton baseURL={this.state.baseURL}
 				client={this.props.client}
 				onStarted={this.handleUploadStarted}
 				onSuccess={this.handleUploadSuccess}
 				onError={this.handleUploadError}
 				onProgress={this.handleUploadProgress}
-				ref="uploadButton" />;
+				ref="uploadButton" />
+			<a href="javascript://refresh" className="button dav dav-refresh" onClick={this.handleRefresh} title="refresh"></a>
+		</div>;
 		return <div>
 			<MediaDisplay media={this.state.media}
 				onDisplay={this.handleMediaDisplayed}
@@ -172,20 +179,19 @@ var WebDavUI = React.createClass({
 				ref="mediaDisplay" />
 			<WebDavBrowser rootURL={this.props.rootURL}
 				client={this.props.client}
-				controls={controls}
+				header={header}
 				onSelectFile={this.handleFileSelect}
 				onSelectCollection={this.handleCollectionSelect}
 				onCollectionLoaded={this.handleCollectionLoaded}
 				getPreviewHref={this.getPreviewHref}
 				ref="browser" />
-			<PendingTasks ref="tasks" />
 		</div>
 	}
 });
 
 function createWebDavUI(element, rootURL) {
 	var client = new WebDavClient();
-	ReactDOM.render(<WebDavUI rootURL={rootURL} client={client} />, element);
+	return ReactDOM.render(<WebDavUI rootURL={rootURL} client={client} />, element);
 };
 
 module.exports = createWebDavUI;

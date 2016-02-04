@@ -48,6 +48,10 @@
 			border: 1px solid $borderColor;
 			@include border-radius(0.6em);
 			@extend .dav, .dav-times;
+
+			&:focus, &:active {
+				border: 1px solid $actionColor;
+			}
 		}
 	}
 	.dialog-content {

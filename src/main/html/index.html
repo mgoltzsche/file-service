@@ -1,11 +1,27 @@
+<!DOCTYPE html>
 <html>
 <head>
-<script type="text/javascript" src="/resources/js/webdav-client-${version}.min.js"></script>
-<link rel="stylesheet" type="text/css" href="/resources/css/webdav-client-${version}.min.css" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script type="text/javascript" src="/resources/js/webdav-client-${version}.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="/resources/css/webdav-client-${version}.min.css" />
 </head>
 <body>
-<main role="main" class="main">
-	<div id="webdav-ui">Loading …</div>
-</main>
+<div class="main">
+	<header class="application-header">
+		<h1>Robin's files</h1>
+	</header>
+	<main role="main">
+		<section id="loader">
+			<div class="loader-hint">
+				<h2><i class="dav dav-spinner"></i>Loading …</h2>
+				<div>Doesn't work? <a href="/files">Browse files without JavaScript</a></div>
+			</div>
+		</section>
+		<div id="webdav-ui"></div>
+	</main>
+	<footer class="application-footer">
+		WebDAV-UI ${version}
+	</footer>
+</div>
 </body>
 </html>

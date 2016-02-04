@@ -143,6 +143,9 @@ var Dialog = React.createClass({
 		e.preventDefault();
 		this.hide();
 	},
+	toggle: function() {
+		(this._show ? this.hide : this.show)();
+	},
 	show: function() {
 		if (!this._show) {
 			log.debug('show');
@@ -262,7 +265,7 @@ var Dialog = React.createClass({
 		return <div className={this.getClassName()} ref="dialog">
 			<div className="dialog-header" ref="header">
 				{this.props.header}
-				<a className="dialog-close" onClick={this.handleClose}></a>
+				<a javascript="javascript://close" className="dialog-close" onClick={this.handleClose}></a>
 			</div>
 			<div className="dialog-content" ref="content">
 				{this.props.children}
@@ -275,7 +278,7 @@ var Dialog = React.createClass({
 });
 
 domready(function () {
-	modalElement = document.createElement('div');
+	var modalElement = document.createElement('div');
 	modalElement.className = 'dialog-modal-overlay hidden';
 	modalElement.addEventListener('click', modalOverlay.onClick.bind(modalOverlay));
 	document.body.appendChild(modalElement);
