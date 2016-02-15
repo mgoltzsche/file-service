@@ -14,11 +14,15 @@ server {
 	access_log    /var/log/nginx/robin_access.log;
 	error_log     /var/log/nginx/robin_error.log debug;
 
-	ssl_certificate     /etc/ssl/certs/server.crt;
-	ssl_certificate_key /etc/ssl/private/server.key;
+	ssl_certificate     /etc/ssl/certs/robin.algorythm.de.crt;
+	ssl_certificate_key /etc/ssl/private/robin.algorythm.de.key;
 
 	auth_basic           "Robin's files";
 	auth_basic_user_file $root_dir/../.htpasswd;
+
+	client_body_buffer_size 128K;
+	dav_ext_methods         OPTIONS PROPFIND; # At least OPTION required since MS-WebDAV-MiniRedir requests first: OPTIONS /
+	dav_access              group:rw all:r;
 
 	location / {
 		alias $root_dir/ui/;
@@ -34,7 +38,7 @@ server {
 		client_max_body_size    2000M;
 		client_body_timeout     1200s;
 		dav_methods             PUT DELETE MKCOL COPY MOVE;
-		dav_ext_methods         PROPFIND OPTIONS;
+		dav_ext_methods         OPTIONS PROPFIND;
 		dav_access              group:rw all:r;
 		create_full_put_path    on;
 	}
