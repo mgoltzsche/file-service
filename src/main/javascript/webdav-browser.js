@@ -47,12 +47,30 @@ var WebDavBrowser = React.createClass({
 		this.select(item.href);
 	},
 	handleItemMove: function(item) {
-		var destination = prompt('Please type the destination you want the resource ' + item.href + ' to be moved to:', item.href);
+		var isCollection = item.resourcetype === 'collection';
+		var src = item.href;
 
-		if (destination && item.href !== destination) {
-			this.props.client.move(item.href, destination, function() {
-				this.update();
-			}.bind(this));
+		if (isCollection)
+			src += '/';
+
+		var dest = src;
+
+		while (true) {
+			dest = prompt('Please type the destination you want the resource ' + src + ' to be moved to:', dest);
+
+			if (!isCollection || !dest || dest.indexOf(src) === -1) // Make sure collection is not moved into itself
+				break;
+		}
+
+		if (dest) {
+			if (isCollection && dest.substring(dest.length - 1, dest.length) !== '/')
+				dest += '/';
+
+			if (src !== dest) {
+				this.props.client.move(src, dest, function() {
+					this.update();
+				}.bind(this));
+			}
 		}
 	},
 	handleItemDelete: function(item) {
