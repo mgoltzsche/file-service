@@ -4,12 +4,25 @@ var ReactDOM = require('react-dom');
 var WebDavClient = require('./webdav-client.js');
 var formatSize = require('./format-size.js');
 
+var fileNamePattern = /^[^\/\\?%*:|"'\<\>]+$/; // Taken from https://en.wikipedia.org/wiki/Filename
+
 var itemName = function(href) {
 	return decodeURIComponent(href.split('/').pop());
 };
 
 var collectionHref = function(docHref) {
 	return docHref.split('/').slice(0, -1).join('/');
+};
+
+var decodePath = function(path) {
+	return path.split('/').map(function(segment) {
+		return decodeURIComponent(segment);
+	}).join('/');
+};
+var encodePath = function(path) {
+	return path.split('/').map(function(segment) {
+		return encodeURIComponent(segment);
+	}).join('/');
 };
 
 var WebDavBrowser = React.createClass({
@@ -48,7 +61,7 @@ var WebDavBrowser = React.createClass({
 	},
 	handleItemMove: function(item) {
 		var isCollection = item.resourcetype === 'collection';
-		var src = item.href;
+		var src = decodePath(item.href);
 
 		if (isCollection)
 			src += '/';
@@ -67,17 +80,40 @@ var WebDavBrowser = React.createClass({
 				dest += '/';
 
 			if (src !== dest) {
-				this.props.client.move(src, dest, function() {
+				this.props.client.move(encodePath(src), encodePath(dest), function() {
 					this.update();
 				}.bind(this));
 			}
 		}
 	},
 	handleItemDelete: function(item) {
-		if (confirm('Do you really want to delete ' + item.href + '?')) {
-			this.props.client.delete(item.href, function() {
+		var href = item.href;
+
+		if (item.resourcetype === 'collection')
+			href += '/';
+
+		if (confirm('Do you really want to delete ' + href + '?')) {
+			this.props.client.delete(href, function() {
 				this.update();
 			}.bind(this));
+		}
+	},
+	createCollection: function() {
+		var name = '';
+
+		while (true) {
+			name = prompt('Type the name of the collection to be created:', name);
+
+			if (!name) {
+				break;
+			}
+
+			if (fileNamePattern.test(name)) {
+				this.props.client.mkcol(this.state.collectionHref + '/' + encodeURIComponent(name) + '/', function() {
+					this.update();
+				}.bind(this));
+				break;
+			}
 		}
 	},
 	select: function(href) {

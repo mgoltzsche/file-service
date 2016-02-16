@@ -36,6 +36,13 @@ WebDavClient.prototype.propfind = function(path, depth, callback, errorCallback)
 		.send('<?xml version="1.0" encoding="UTF-8" ?><D:propfind xmlns:D="DAV:"><D:allprop /></D:propfind>');
 };
 
+WebDavClient.prototype.mkcol = function(path, callback, errorCallback) {
+	request('MKCOL', path)
+		.onSuccess(callback)
+		.onError(errorCallback)
+		.send();
+};
+
 WebDavClient.prototype.get = function(path, callback, errorCallback) {
 	request('GET', path)
 		.onSuccess(callback)

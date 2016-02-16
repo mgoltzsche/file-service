@@ -51,7 +51,7 @@ var UploadButton = React.createClass({
 				var upload = {
 					id: 'upload' + this.state.uploadIdSequence++,
 					label: file.name,
-					info: ' (' + formatSize(file.size) + ')',
+					info: formatSize(file.size),
 					done: 0,
 					total: file.size
 				};

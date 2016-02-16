@@ -106,6 +106,9 @@ var WebDavUI = React.createClass({
 	handleRefresh: function() {
 		this.refs.browser.update();
 	},
+	handleCreateCollection: function() {
+		this.refs.browser.createCollection();
+	},
 	handleUploadStarted: function(upload) {
 		this.refs.tasks.addTask(upload);
 	},
@@ -169,6 +172,7 @@ var WebDavUI = React.createClass({
 				onError={this.handleUploadError}
 				onProgress={this.handleUploadProgress}
 				ref="uploadButton" />
+			<a href="javascript://create_collection" className="button dav dav-folder-plus" onClick={this.handleCreateCollection} title="create collection"></a>
 			<a href="javascript://refresh" className="button dav dav-refresh" onClick={this.handleRefresh} title="refresh"></a>
 		</div>;
 		return <div>
