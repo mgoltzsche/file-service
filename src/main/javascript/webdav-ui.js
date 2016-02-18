@@ -2,11 +2,12 @@ var log = require('./logger.js')('WebDavUI');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var WebDavClient = require('./webdav-client.js');
+var taskRegistry = require('./task-registry.js');
 var WebDavBrowser = require('./webdav-browser.js');
 var location = require('./hash-location.js');
 var MediaDisplay = require('./media-display.js');
 var UploadButton = require('./upload-button.js');
-var Progress = require('./pending-tasks.js');
+var Progress = require('./progress-view.js');
 
 var WebDavUI = React.createClass({
 	_imageHrefPattern: /^\/files\/(.*?)\.(jpg|jpeg|png|gif)$/i,
@@ -110,18 +111,18 @@ var WebDavUI = React.createClass({
 		this.refs.browser.createCollection();
 	},
 	handleUploadStarted: function(upload) {
-		this.refs.tasks.addTask(upload);
+		taskRegistry.addTask(upload);
 	},
 	handleUploadSuccess: function(upload) {
 		this.refs.browser.update();
-		this.refs.tasks.removeTask(upload.id);
+		taskRegistry.removeTask(upload.id);
 	},
 	handleUploadError: function(upload, status) {
 		alert('Upload ' + upload.label + ' failed with status code ' + status);
-		this.refs.tasks.removeTask(upload.id);
+		taskRegistry.removeTask(upload.id);
 	},
 	handleUploadProgress: function(upload, loaded, total) {
-		this.refs.tasks.setProgress(upload.id, loaded, total);
+		taskRegistry.setProgress(upload.id, loaded, total);
 	},
 	_matchImageResolution: function(maxWidth, maxHeight) {
 		var r, resolutions = this.props.imageResolutions;
@@ -164,7 +165,7 @@ var WebDavUI = React.createClass({
 	},
 	render: function() {
 		var header = <div className="webdav-controls">
-			<Progress ref="tasks" />
+			<Progress />
 			<UploadButton baseURL={this.state.baseURL}
 				client={this.props.client}
 				onStarted={this.handleUploadStarted}
