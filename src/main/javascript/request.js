@@ -15,7 +15,7 @@ function XHRequest(method, path, log) {
 XHRequest.prototype._log = function() {};
 XHRequest.prototype._successHandler = function(xhr) {};
 XHRequest.prototype._errorHandler = function(xhr) {
-	this._log('ERROR', 'Request ' + this._name + ' failed with HTTP status code ' + xhr.status);
+	this._log('DEBUG', 'Request ' + this._name + ' failed with HTTP status code ' + xhr.status);
 };
 XHRequest.prototype.onSuccess = function(successCallback) {
 	return this;
@@ -87,7 +87,6 @@ XHRequest.prototype.send = function(data) {
 
 	xhr.send(data);
 };
-
 
 module.exports = function(logger) {
 	return function(method, path) {

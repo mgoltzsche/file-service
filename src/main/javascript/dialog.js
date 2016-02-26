@@ -82,16 +82,17 @@ var Dialog = React.createClass({
 			this.hide();
 		}.bind(this);
 
-		document.body.addEventListener('keyup', this._escListener);
-		window.addEventListener('resize', this._resizeListener);
-
 		// Detect outer size of dialog as offset x/y
+		// ATTENTION: Requires CSS to be loaded before this javascript
 		var dialog = this.refs.dialog;
 		var content = this.refs.content;
 		content.style.visibility = 'hidden';
 		content.style.overflow = 'hidden';
 		content.style.display = 'block';
 		dialog.style.display = 'block';
+		dialog.style.position = 'fixed';
+		dialog.style.left = '-2000px';
+		dialog.style.top = '-2000px';
 		var testSize = '1000px';
 		content.style.width = testSize;
 		content.style.height = testSize;
@@ -101,14 +102,20 @@ var Dialog = React.createClass({
 		content.style.maxHeight = testSize;
 		this._offsetX = dialog.offsetWidth - 1000; // Detect offset x
 		this._offsetY = dialog.offsetHeight - 1000; // Detect offset y
+		log.debug('Detected offset: x: ' + this._offsetX + ', y: ' + this._offsetY);
 		content.removeAttribute('style'); // Remove all inline styles used to detect offset
 		dialog.removeAttribute('style');
-		log.debug('Detected offset: x: ' + this._offsetX + ', y: ' + this._offsetY);
+
+		if (this._offsetX < 0) this._offsetX = 0; // Fallback on error
+		if (this._offsetY < 0) this._offsetY = 0; // Fallback on error
 
 		this._prefWidth = this.props.prefWidth;
 		this._prefHeight = this.props.prefHeight;
 		this._resizeProportional = this.props.resizeProportional;
 		this.resize();
+
+		document.body.addEventListener('keyup', this._escListener);
+		window.addEventListener('resize', this._resizeListener);
 
 		if (this.props.show) {
 			this._show = false;

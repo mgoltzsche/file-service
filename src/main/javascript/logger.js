@@ -1,3 +1,7 @@
+var log = [];
+var consoleLog = console && typeof console.log === 'function'
+	? function(msg) {console.log(msg);} : function() {};
+
 function Logger(name) {
 	this._name = name;
 }
@@ -14,9 +18,15 @@ Logger.prototype.log = function(level, message, error) {
 	message = level + ' - ' + this._name + ' - ' + message;
 
 	if (typeof error !== 'undefined' && error !== null) {
-		console.log(message + ': ' + error + "\n" + (error.stack ? error.stack : ''));
-	} else {
-		console.log(message);
+		message += ': ' + error + "\n" + (error.stack ? error.stack : '');
+	}
+
+	consoleLog(message);
+	log.push(message);
+
+	if (level === 'ERROR' && !LoggerFactory.isErrorMsgReported(message)) {
+		LoggerFactory._reportedErrorMsgs.push(message);
+		LoggerFactory._errorReporter(log.join("\n"));
 	}
 };
 
@@ -24,12 +34,22 @@ function LoggerFactory(name) {
 	return new Logger(name);
 }
 
+LoggerFactory._reportedErrorMsgs = [];
+LoggerFactory.isErrorMsgReported = function(errorMsg) {
+	var reported = LoggerFactory._reportedErrorMsgs;
+
+	for (var i = 0; i < reported.length; i++)
+		if (reported[i] === errorMsg)
+			return true;
+
+	return false;
+};
+
+LoggerFactory._errorReporter = function() {};
+LoggerFactory._lastReportedErrorMsg = null;
+
+LoggerFactory.setErrorReporter = function(reporter) {
+	LoggerFactory._errorReporter = reporter;
+};
+
 module.exports = LoggerFactory;
-
-var logger = new Logger('main');
-
-var navigator = window.navigator;
-logger.info('Browser engine: ' + navigator.product + ' ' + navigator.appVersion
-	+ "\n        Platform: " + navigator.platform
-	+ "\n        User agent: " + navigator.userAgent
-	+ "\n        Language: " + navigator.language);

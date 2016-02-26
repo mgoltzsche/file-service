@@ -1,4 +1,5 @@
-var log = require('./logger.js')('WebDavUI');
+var logFactory = require('./logger.js');
+var log = logFactory('WebDavUI');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var WebDavClient = require('./webdav-client.js');
@@ -9,6 +10,8 @@ var MediaDisplay = require('./media-display.js');
 var UploadButton = require('./upload-button.js');
 var Progress = require('./progress-view.js');
 
+var imgMarginX = 22, imgMarginY = 56;
+
 var WebDavUI = React.createClass({
 	_imageHrefPattern: /^\/files\/(.*?)\.(jpg|jpeg|png|gif)$/i,
 	getDefaultProps: function() {
@@ -16,9 +19,9 @@ var WebDavUI = React.createClass({
 			rootURL: '/',
 			client: new WebDavClient(),
 			imageResolutions: [
-				[1858, 792], // Workstation/Laptop resolution without padding
-				[378, 611], // IPhone 6 resolution without padding
-				[298, 290] // lowest possible solution
+				[640-imgMarginX, 640-imgMarginY], // Large phone/tablet resolution (longer side taken twice)
+				[1366-imgMarginX, 1024-imgMarginY], // Two popular workstation/laptop resolutions according to W3C
+				[1920-imgMarginX, 1080-imgMarginY] // FullHD
 			]
 		};
 	},
@@ -131,26 +134,12 @@ var WebDavUI = React.createClass({
 			r = resolutions[i];
 			var width = r[0], height = r[1];
 
-			if (width <= maxWidth && height <= maxHeight) {
-				if (i > 0) {
-					var last = resolutions[i - 1];
-					var distLast = this._resolutionDistance(last[0], last[1], maxWidth, maxHeight) * 1.5;
-					var distThis = this._resolutionDistance(height, width, maxWidth, maxHeight);
-
-					return distThis < distLast ? r : last;
-				} else {
-					return r;
-				}
+			if (r[0] >= maxWidth && r[1] >= maxHeight) {
+				return r;
 			}
 		}
 
 		return r;
-	},
-	_resolutionDistance: function(width1, height1, width2, height2) {
-		var dx = width1 - width2;
-		var dy = height1 - height2;
-
-		return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 	},
 	getPreviewHref: function(item) {
 		if (this._imageHrefPattern.test(item.href))
@@ -196,6 +185,7 @@ var WebDavUI = React.createClass({
 
 function createWebDavUI(element, rootURL) {
 	var client = new WebDavClient();
+
 	return ReactDOM.render(<WebDavUI rootURL={rootURL} client={client} />, element);
 };
 

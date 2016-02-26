@@ -4,11 +4,13 @@
 
 	<groupId>de.algorythm.webdav</groupId>
 	<artifactId>webdav-client</artifactId>
-	<version>0.0.4</version>
+	<version>0.0.5</version>
 	<packaging>pom</packaging>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.build.timestamp.format>yyMMddHHmm</maven.build.timestamp.format>
+		<buildNumber>${maven.build.timestamp}</buildNumber>
 	</properties>
 
 	<build>

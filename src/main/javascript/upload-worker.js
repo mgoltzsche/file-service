@@ -13,6 +13,8 @@ module.exports = function(self) {
 		var data = evt.data;
 
 		try {
+			var contentType = typeof data.data === 'string' ? 'text/plain' : data.data.type;
+
 			switch(data.type) {
 				case 'upload':
 					request(data.method, data.url)
@@ -37,8 +39,8 @@ module.exports = function(self) {
 								url: data.url
 							});
 						})
-						.setRequestHeader('Content-Type', data.file.type)
-						.send(data.file);
+						.setRequestHeader('Content-Type', contentType)
+						.send(data.data);
 					break;
 				default:
 					log('ERROR', 'Unsupported message type: ' + data.type + ". Expecting message: {type: '<type>', msg: <message>}");

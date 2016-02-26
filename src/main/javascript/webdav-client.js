@@ -16,17 +16,25 @@ var resolveUrl = function(url) {
 	}
 };
 
-function WebDavClient(defaultErrorHandler) {
-	this._defaultErrorHandler = defaultErrorHandler || function(xhr) {alert('WebDAV request failed with HTTP status code ' + xhr.status + '!');};
+function WebDavClient(user, password) {
+	this._defaultErrorHandler = function(xhr) {alert('WebDAV request failed with HTTP status code ' + xhr.status + '!');};
 	this._uploadWorker = null;
 	this._uploadQueue = [];
 	this._pendingUploads = {};
 	this._pendingUploadCount = 0;
+	if (user && password) {
+		this._request = function(method, path) {
+			return request(method, path)
+				.setRequestHeader('Authorization', 'Basic ' + btoa(this._user + ':' + this._password));
+		};
+	} else {
+		this._request = request;
+	}
 	log.debug('Upload worker supported: ' + UploadWorkerManager.isSupported());
 }
 
 WebDavClient.prototype.propfind = function(path, depth, callback, errorCallback) {
-	request('PROPFIND', path)
+	this._request('PROPFIND', path)
 		.onSuccess(function(callback, xhr) {
 			callback(this._parsePropfindResult(xhr))
 		}.bind(this, callback))
@@ -37,28 +45,28 @@ WebDavClient.prototype.propfind = function(path, depth, callback, errorCallback)
 };
 
 WebDavClient.prototype.mkcol = function(path, callback, errorCallback) {
-	request('MKCOL', path)
+	this._request('MKCOL', path)
 		.onSuccess(callback)
 		.onError(errorCallback)
 		.send();
 };
 
 WebDavClient.prototype.get = function(path, callback, errorCallback) {
-	request('GET', path)
+	this._request('GET', path)
 		.onSuccess(callback)
 		.onError(errorCallback)
 		.send();
 };
 
 WebDavClient.prototype.delete = function(path, callback, errorCallback) {
-	request('DELETE', path)
+	this._request('DELETE', path)
 		.onSuccess(callback)
 		.onError(errorCallback)
 		.send();
 };
 
 WebDavClient.prototype.move = function(path, destination, callback, errorCallback) {
-	request('MOVE', path)
+	this._request('MOVE', path)
 		.onSuccess(callback)
 		.onError(errorCallback)
 		.setRequestHeader('Destination', destination)
@@ -71,10 +79,10 @@ WebDavClient.prototype.move = function(path, destination, callback, errorCallbac
 		.send();
 };
 
-WebDavClient.prototype.put = function(path, file, callback, errorCallback, progressCallback) {
+WebDavClient.prototype.put = function(path, data, callback, errorCallback, progressCallback) {
 	var uploadInfo = {
 		url: resolveUrl(path),
-		file: file,
+		data: data,
 		onSuccess: callback,
 		onError: errorCallback,
 		onProgress: progressCallback
@@ -141,23 +149,29 @@ WebDavClient.prototype._onUploadProgress = function(upload, loaded, total) {
 	}
 };
 
+WebDavClient.prototype._newUploadProgressListener = function(upload) {
+	return upload.onProgress ? this._onUploadProgress.bind(undefined, upload) : null;
+};
+
 WebDavClient.prototype._putWithWorker = function(upload) {
 	if (this._uploadWorker === null)
 		this._uploadWorker = new UploadWorkerManager();
 
-	this._uploadWorker.upload('PUT', upload.url, upload.file,
+	this._uploadWorker.upload('PUT', upload.url, upload.data,
 		this._onUploadSuccess.bind(this, upload),
 		this._onUploadError.bind(this, upload),
-		this._onUploadProgress.bind(undefined, upload));
+		this._newUploadProgressListener(upload));
 };
 
 WebDavClient.prototype._putFallback = function(upload) {
-	request('PUT', upload.url)
+	var contentType = typeof update.data === 'string' ? 'text/plain' : update.data.type;
+
+	this._request('PUT', upload.url)
 		.onSuccess(this._onUploadSuccess.bind(this, upload))
 		.onError(this._onUploadError.bind(this, upload))
-		.onUploadProgress(this._onUploadProgress.bind(undefined, upload))
-		.setRequestHeader('Content-Type', upload.file.type)
-		.send(upload.file);
+		.onUploadProgress(this._newUploadProgressListener(upload))
+		.setRequestHeader('Content-Type', contentType)
+		.send(upload.data);
 };
 
 WebDavClient.prototype._parsePropfindResult = function(xhr) {
@@ -266,7 +280,7 @@ UploadWorkerManager.isSupported = function() {
 };
 UploadWorkerManager.prototype._log = createLogger('UploadWorkerManager');
 UploadWorkerManager.prototype._workerLog = createLogger('UploadWorker');
-UploadWorkerManager.prototype.upload = function(method, url, file, onSuccess, onError, onProgress) {
+UploadWorkerManager.prototype.upload = function(method, url, data, onSuccess, onError, onProgress) {
 	url = resolveUrl(url);
 
 	if (this._pendingUploads[url])
@@ -282,7 +296,7 @@ UploadWorkerManager.prototype.upload = function(method, url, file, onSuccess, on
 		type: 'upload',
 		method: method,
 		url: url,
-		file: file
+		data: data
 	});
 
 	return true;

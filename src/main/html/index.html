@@ -2,8 +2,9 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<script type="text/javascript" src="/resources/js/webdav-client-${version}.min.js"></script>
+	<!-- style must be loaded before script to be able include margin/padding/border in initial dialog offset calculations -->
 	<link rel="stylesheet" type="text/css" href="/resources/css/webdav-client-${version}.min.css" />
+	<script type="text/javascript" src="/resources/js/webdav-client-${version}.min.js"></script>
 </head>
 <body>
 <div class="main">
@@ -20,7 +21,7 @@
 		<div id="webdav-ui"></div>
 	</main>
 	<footer class="application-footer">
-		WebDAV-UI ${version}
+		WebDAV-UI ${version} build ${buildNumber}
 	</footer>
 </div>
 </body>
