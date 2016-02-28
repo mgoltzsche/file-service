@@ -83,7 +83,6 @@ var ImageLoader = React.createClass({
 		return 'image-loader ' + this.props.className + (this.state.loading ? ' loading' : '');
 	},
 	render: function() {
-		log.debug('RENDER IMAGE');
 		return <div className={this.getClassName()} ref="container">
 			<i className="progress-indicator"></i>
 			<img ref="image" />

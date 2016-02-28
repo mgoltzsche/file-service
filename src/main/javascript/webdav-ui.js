@@ -4,6 +4,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var WebDavClient = require('./webdav-client.js');
 var taskRegistry = require('./task-registry.js');
+var fileUploadService = require('./file-upload-service.js');
 var WebDavBrowser = require('./webdav-browser.js');
 var location = require('./hash-location.js');
 var MediaDisplay = require('./media-display.js');
@@ -42,8 +43,8 @@ var WebDavUI = React.createClass({
 	componentWillUnmount: function() {
 		location.removeListener(this._locationListener);
 	},
-	getScaledImageHref: function(href, width, height) {
-		return href.replace(this._imageHrefPattern, '/image/$1-' + width + 'x' + height + '.$2');
+	getTransformedImageHref: function(href, mode, width, height) {
+		return href.replace(this._imageHrefPattern, '/image/' + mode + '/$1-' + width + 'x' + height + '.$2');
 	},
 	toMediaDisplayModel: function(webdavItems) {
 		var media = [];
@@ -84,7 +85,6 @@ var WebDavUI = React.createClass({
 		location.hash(href);
 		this.state.currentCollectionHref = href;
 		this.refs.mediaDisplay.hide();
-		this.refs.uploadButton.setBaseURL(this.state.currentCollectionHref);
 		document.title = href;
 	},
 	handleMediaDisplayed: function(media, index) {
@@ -127,6 +127,13 @@ var WebDavUI = React.createClass({
 	handleUploadProgress: function(upload, loaded, total) {
 		taskRegistry.setProgress(upload.id, loaded, total);
 	},
+	handleFileUpload: function(files) {
+		fileUploadService(this.props.client, this.state.currentCollectionHref, files, function() {
+			this.refs.browser.update();
+		}.bind(this), function(upload, status) {
+			alert('Upload ' + upload.label + ' failed with status code ' + status);
+		});
+	},
 	_matchImageResolution: function(maxWidth, maxHeight) {
 		var r, resolutions = this.props.imageResolutions;
 
@@ -143,25 +150,19 @@ var WebDavUI = React.createClass({
 	},
 	getPreviewHref: function(item) {
 		if (this._imageHrefPattern.test(item.href))
-			return this.getScaledImageHref(item.href, 27, 23);
+			return this.getTransformedImageHref(item.href, 'crop', 27, 23);
 
 		return null;
 	},
 	rewriteImageHref: function(href, maxWidth, maxHeight) {
 		var r = this._matchImageResolution(maxWidth, maxHeight);
 
-		return this.getScaledImageHref(href, r[0], r[1]);
+		return this.getTransformedImageHref(href, 'scale', r[0], r[1]);
 	},
 	render: function() {
 		var header = <div className="webdav-controls">
 			<Progress />
-			<UploadButton baseURL={this.state.baseURL}
-				client={this.props.client}
-				onStarted={this.handleUploadStarted}
-				onSuccess={this.handleUploadSuccess}
-				onError={this.handleUploadError}
-				onProgress={this.handleUploadProgress}
-				ref="uploadButton" />
+			<UploadButton onFilesSelected={this.handleFileUpload} />
 			<a href="javascript://create_collection" className="button dav dav-folder-plus" onClick={this.handleCreateCollection} title="create collection"></a>
 			<a href="javascript://refresh" className="button dav dav-refresh" onClick={this.handleRefresh} title="refresh"></a>
 		</div>;
@@ -177,6 +178,7 @@ var WebDavUI = React.createClass({
 				onSelectFile={this.handleFileSelect}
 				onSelectCollection={this.handleCollectionSelect}
 				onCollectionLoaded={this.handleCollectionLoaded}
+				onDropFiles={this.handleFileUpload}
 				getPreviewHref={this.getPreviewHref}
 				ref="browser" />
 		</div>

@@ -35,26 +35,29 @@ var WebDavBrowser = React.createClass({
 			getPreviewHref: function(item) {return '';},
 			onSelectFile: function(href) {},
 			onSelectCollection: function(href) {},
-			onCollectionLoaded: function(collection) {}
+			onCollectionLoaded: function(collection) {},
+			onDropFiles: null
 		};
 	},
 	getInitialState: function() {
 		return {
 			collectionHref: null,
 			items: [],
-			mode: 'loading'
+			mode: 'loading',
+			collections: {}
 		};
 	},
-	componentDidMount: function() {
-		this._collections = {};
+	handleFileDragOver: function(evt) {
+		evt.stopPropagation();
+		evt.preventDefault();
+		evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
 	},
-	handleRefresh: function(e) {
-		try {
-			e.preventDefault();
-			this.update();
-		} catch(e) {
-			log.error('Refresh failed', e);
-		}
+	handleFileDrop: function(evt) {
+		evt.stopPropagation();
+		evt.preventDefault();
+
+		if (this.props.onDropFiles)
+			this.props.onDropFiles(evt.dataTransfer.files);
 	},
 	handleItemSelect: function(item) {
 		this.select(item.href);
@@ -119,7 +122,7 @@ var WebDavBrowser = React.createClass({
 	select: function(href) {
 		var fileSelected = false;
 
-		if (this._collections[href] === false) {
+		if (this.state.collections[href] === false) {
 			// Avoid requests of items that are known not to be collections.
 			// Instead request parent collection
 			this.props.onSelectFile(href);
@@ -147,7 +150,8 @@ var WebDavBrowser = React.createClass({
 		this.setState({
 			collectionHref: href,
 			items: this.state.items,
-			mode: 'loading'
+			mode: 'loading',
+			collections: this.state.collections
 		});
 
 		this.props.client.propfind(href, 1, function(items) {
@@ -156,7 +160,7 @@ var WebDavBrowser = React.createClass({
 
 			if (requestedItem.resourcetype !== 'collection') { // Requested resource is not a collection
 				// Browse containing collection
-				this._collections[requestedItemHref] = false;
+				this.state.collections[requestedItemHref] = false;
 				this.props.onSelectFile(requestedItemHref);
 				this.update(collectionHref(requestedItemHref));
 				return;
@@ -167,13 +171,14 @@ var WebDavBrowser = React.createClass({
 
 				item.name = itemName(item.href);
 				// Mark item href as collection (true) or document (false)
-				this._collections[item.href] = item.resourcetype === 'collection';
+				this.state.collections[item.href] = item.resourcetype === 'collection';
 			}
 
 			this.setState({
 				collectionHref: requestedItemHref,
 				items: items.slice(1),
-				mode: 'ready'
+				mode: 'ready',
+				collections: this.state.collections
 			});
 
 			this.props.onCollectionLoaded(items);
@@ -181,7 +186,8 @@ var WebDavBrowser = React.createClass({
 			this.setState({
 				collectionHref: this.state.collectionHref,
 				items: [],
-				mode: 'ready'
+				mode: 'ready',
+				collections: this.state.collections
 			});
 			alert('WebDAV request failed with HTTP status code ' + xhr.status + '!');
 		}.bind(this));
@@ -197,7 +203,9 @@ var WebDavBrowser = React.createClass({
 				onDelete={this.handleItemDelete}
 				key={item.href} />;
 		}.bind(this));
-		return <article className={className}>
+		return <article className={className}
+				onDragOver={this.handleFileDragOver}
+				onDrop={this.handleFileDrop}>
 			<header className="webdav-browser-header">
 				<i className="webdav-item-icon" ref="icon"></i>
 				<WebDavBreadcrumbs path={this.state.collectionHref}

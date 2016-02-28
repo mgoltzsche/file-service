@@ -267,7 +267,6 @@ var Dialog = React.createClass({
 		this.refs.dialog.className = this.getClassName();
 	},
 	render: function() {
-		log.debug('RENDER DIALOG');
 		return <div className={this.getClassName()} ref="dialog">
 			<div className="dialog-header" ref="header">
 				{this.props.header}

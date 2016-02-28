@@ -1,7 +1,6 @@
 var pkg = require('./package.json');
 var gulp = require('gulp');
 var rename = require('gulp-rename');
-var babel = require('gulp-babel');
 var jshint = require('gulp-jshint');
 var sass = require('gulp-sass');
 var sourcemaps = require('gulp-sourcemaps');
@@ -21,14 +20,6 @@ var fontName = 'webdav-icons';
 gulp.task('default', ['browserify', 'sass', 'iconfont'], function() {
 	return gulp.src('./package.json')
 		.pipe(gulp.dest('${basedir}/target/web-distribution'));
-});
-
-gulp.task('babel', ['clean'], function() {
-	return gulp.src('js/*.js')
-		.pipe(babel({
-			presets: ['es2015']
-		}))
-		.pipe(gulp.dest('js'));
 });
 
 gulp.task('sass', ['clean', 'iconfont'], function() {

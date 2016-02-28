@@ -13,6 +13,7 @@ server {
 	root          $root_dir;
 	access_log    /var/log/nginx/robin_access.log;
 	error_log     /var/log/nginx/robin_error.log debug;
+	charset       UTF-8;
 
 	ssl_certificate     /etc/ssl/certs/robin.algorythm.de.crt;
 	ssl_certificate_key /etc/ssl/private/robin.algorythm.de.key;
@@ -45,7 +46,7 @@ server {
 		create_full_put_path    on;
 	}
 
-	location ~ '^/image/(.*?)-(\d+)x(\d+)(\.[^\.]+)$' {
+	location ~ '^/image/scale/(.*?)-(\d+)x(\d+)(\.[^\.]+)$' {
 		set $image     $1;
 		set $width     $2;
 		set $height    $3;
@@ -56,7 +57,19 @@ server {
 		image_filter_jpeg_quality 75;
 		image_filter_transparency off;
 		image_filter resize       $width $height;
-#		image_filter crop         100 100;
+	}
+
+	location ~ '^/image/crop/(.*?)-(\d+)x(\d+)(\.[^\.]+)$' {
+		set $image     $1;
+		set $width     $2;
+		set $height    $3;
+		set $extension $4;
+
+		alias $root_dir/files/$image$extension;
+		image_filter_buffer       5m;
+		image_filter_jpeg_quality 75;
+		image_filter_transparency off;
+		image_filter crop         $width $height;
 	}
 
 	location ~ '^/video/(.*?)\.(mp4|m4v|m4a)$' {

@@ -39,8 +39,10 @@
 
 		.pending-task-label {
 			display: block;
+			overflow: hidden;
 			white-space: nowrap;
-			text-overflow: ellipse;
+			width: 100%;
+			text-overflow: ellipsis;
 		}
 		.pending-task-info {
 			float: right;

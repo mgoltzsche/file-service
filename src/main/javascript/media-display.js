@@ -236,7 +236,6 @@ var MediaDisplay = React.createClass({
 		this.refs.dialog.setPreferredContentSize(width, height, true); // Cheaper than setState
 	},
 	render: function() {
-		log.debug('RENDER MEDIA DISPLAY');
 		var footer = <div>
 			<a ref="previous" title="previous" onClick={this.handlePrevious}></a>
 			<a ref="label" className="media-display-label"></a>

@@ -37,7 +37,7 @@ domready(function () {
 				+ "\n" + completeLog;
 
 			// TODO: Add cookie to distinguish between users
-			client.put('/files/bug-reports/' + reportId + '.log', reportContent, function() {}, function(status) {
+			client.put('/files/bug-reports/' + reportId + '.txt', reportContent, function() {}, function(status) {
 				log.debug('Cannot report bug since server responded with ' + status);
 			});
 		});

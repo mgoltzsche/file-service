@@ -1,6 +1,9 @@
 .media-display {
 	.dialog-content {
 		text-align: center;
+		@include border-radius($borderRadius);
+		@include border-bottom-left-radius(0);
+		@include border-bottom-right-radius(0);
 	}
 	.dialog-footer {
 		height: 1.5em;
