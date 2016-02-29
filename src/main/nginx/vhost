@@ -7,13 +7,14 @@ server {
 }
 
 server {
-	set $root_dir /var/www/robin/web; 
-	listen        443 ssl;
-	server_name   robin.algorythm.de;
-	root          $root_dir;
-	access_log    /var/log/nginx/robin_access.log;
-	error_log     /var/log/nginx/robin_error.log debug;
-	charset       UTF-8;
+	set $root_dir  /var/www/robin/web; 
+	listen         443 ssl;
+	server_name    robin.algorythm.de;
+	root           $root_dir;
+	access_log     /var/log/nginx/robin_access.log;
+	error_log      /var/log/nginx/robin_error.log debug;
+	source_charset UTF-8;
+	charset        UTF-8;
 
 	ssl_certificate     /etc/ssl/certs/robin.algorythm.de.crt;
 	ssl_certificate_key /etc/ssl/private/robin.algorythm.de.key;
@@ -25,6 +26,7 @@ server {
 	dav_ext_methods         OPTIONS PROPFIND; # At least OPTION required since MS-WebDAV-MiniRedir requests first: OPTIONS /
 	dav_access              group:rw all:r;
 
+	# JavaScript view
 	location / {
 		alias $root_dir/ui/;
 		# when javascript login
@@ -34,6 +36,7 @@ server {
 		try_files $uri $uri/ =404;
 	}
 
+	# WebDAV operations
 	location ~ '^/files(/.*|$)' {
 		autoindex on;
 #		client_body_temp_path   /var/nginx-client-body; # directory to store body temporarily
@@ -46,12 +49,8 @@ server {
 		create_full_put_path    on;
 	}
 
-	location ~ '^/image/scale/(.*?)-(\d+)x(\d+)(\.[^\.]+)$' {
-		set $image     $1;
-		set $width     $2;
-		set $height    $3;
-		set $extension $4;
-
+	# Image resize/crop
+	location ~ '^/image/scale/(?<image>.*?)-(?<width>\d+)x(?<height>\d+)(?<extension>\.[^\.]+)$' {
 		alias $root_dir/files/$image$extension;
 		image_filter_buffer       5m;
 		image_filter_jpeg_quality 75;
@@ -59,12 +58,7 @@ server {
 		image_filter resize       $width $height;
 	}
 
-	location ~ '^/image/crop/(.*?)-(\d+)x(\d+)(\.[^\.]+)$' {
-		set $image     $1;
-		set $width     $2;
-		set $height    $3;
-		set $extension $4;
-
+	location ~ '^/image/crop/(?<image>.*?)-(?<width>\d+)x(?<height>\d+)(?<extension>\.[^\.]+)$' {
 		alias $root_dir/files/$image$extension;
 		image_filter_buffer       5m;
 		image_filter_jpeg_quality 75;
@@ -72,6 +66,7 @@ server {
 		image_filter crop         $width $height;
 	}
 
+	# Video pseudo streaming
 	location ~ '^/video/(.*?)\.(mp4|m4v|m4a)$' {
 		alias $root_dir/files/$1.$2;
 		mp4;
