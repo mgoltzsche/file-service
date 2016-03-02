@@ -18,7 +18,7 @@ var runTimestamp = Math.round(Date.now()/1000);
 var fontName = 'webdav-icons';
 
 gulp.task('default', ['browserify', 'sass', 'iconfont'], function() {
-	return gulp.src('./package.json')
+	return gulp.src(['./package.json', '${basedir}/src/main/icons/favicon.png', '${basedir}/src/main/icons/favicon.ico'])
 		.pipe(gulp.dest('${basedir}/target/web-distribution'));
 });
 

@@ -19,8 +19,12 @@ server {
 	ssl_certificate     /etc/ssl/certs/robin.algorythm.de.crt;
 	ssl_certificate_key /etc/ssl/private/robin.algorythm.de.key;
 
-	auth_basic           "Robin's files";
-	auth_basic_user_file $root_dir/../.htpasswd;
+	#auth_basic           "Robin's files";
+	#auth_basic_user_file $root_dir/../.htpasswd;
+	auth_ldap "Forbidden";
+	auth_ldap_servers ldap_master;
+	#auth_ldap_require "cn=webdav,ou=Groups,dc=algorythm,dc=de"; # doesn't work
+	#auth_ldap_satisfy all;
 
 	client_body_buffer_size 128K;
 	dav_ext_methods         OPTIONS PROPFIND; # At least OPTION required since MS-WebDAV-MiniRedir requests first: OPTIONS /

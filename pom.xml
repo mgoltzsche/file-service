@@ -4,7 +4,7 @@
 
 	<groupId>de.algorythm.webdav</groupId>
 	<artifactId>webdav-client</artifactId>
-	<version>0.0.5</version>
+	<version>0.5.0</version>
 	<packaging>pom</packaging>
 
 	<properties>
