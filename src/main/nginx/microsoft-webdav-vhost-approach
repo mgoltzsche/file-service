@@ -1,0 +1,98 @@
+# Taken from http://netlab.linkpc.net/wiki/ru:software:nginx:webdav
+
+server {
+	set $webdav_root "/var/www/webdav";
+	listen        80;
+	listen        443 ssl;
+	server_name   webdav.algorythm.de;
+	root          $webdav_root;
+	access_log    /var/log/nginx/webdav_access.log;
+	error_log     /var/log/nginx/webdav_error.log;
+
+	ssl_certificate     /etc/ssl/certs/webdav.algorythm.de.crt;
+	ssl_certificate_key /etc/ssl/private/webdav.algorythm.de.key;
+
+location ^~ /files {
+	if ($ssl_protocol = "") { # Block non ssl/tls connections.
+		add_header Strict-Transport-Security 'max-age=600';
+		#return 403;
+		return 301 https://$server_name$request_uri;
+	}
+
+	auth_basic           "Private site";
+	auth_basic_user_file /var/www/robin/.htpasswd;
+
+	root                 $webdav_root;
+	error_page           599 = @propfind_handler;
+	error_page           598 = @delete_handler;
+	error_page           597 = @copy_move_handler;
+	open_file_cache      off;
+	client_max_body_size 50m;
+
+	if ($request_method = PROPFIND) {
+		return 599;
+	}
+	if ($request_method = PROPPATCH) { # Unsupported, allways return OK.
+		add_header Content-Type 'text/xml';
+		return     207 '<?xml version="1.0"?><a:multistatus xmlns:a="DAV:"><a:response><a:propstat><a:status>HTTP/1.1 200 OK</a:status></a:propstat></a:response></a:multistatus>';
+	}
+	if ($request_method = MKCOL) { # Microsoft specific handle: add trailing slash.
+		rewrite ^(.*[^/])$ $1/ break;
+	}
+	if ($request_method = DELETE) {
+		return 598;
+	}
+	if ($request_method = COPY) {
+		return 597;
+	}
+	if ($request_method = MOVE) {
+		return 597;
+	}
+
+	dav_methods          PUT MKCOL;
+	dav_ext_methods      OPTIONS;
+	create_full_put_path on;
+	min_delete_depth     0;
+	dav_access           user:rw group:rw all:rw;
+
+	autoindex            on;
+	autoindex_exact_size on;
+	autoindex_localtime  on;
+}
+location @propfind_handler {
+	internal;
+	open_file_cache	off;
+	if (!-e $webdav_root/$uri) { # Microsoft specific handle.
+		return 404;
+	}
+	root			$webdav_root;
+	dav_ext_methods		PROPFIND;
+}
+location @delete_handler {
+	internal;
+	open_file_cache	off;
+	if (-d $webdav_root/$uri) { # Microsoft specific handle: Add trailing slash to dirs.
+		rewrite ^(.*[^/])$ $1/ break;
+	}
+	root			$webdav_root;
+	dav_methods		DELETE;
+}
+location @copy_move_handler {
+	internal;
+	open_file_cache	off;
+	if (-d $webdav_root/$uri) { # Microsoft specific handle: Add trailing slash to dirs.
+#		more_set_input_headers 'Destination: $http_destination/';
+		rewrite ^(.*[^/])$ $1/ break;
+	}
+	root			$webdav_root;
+	dav_methods		COPY MOVE;
+}
+location / {
+	if ($request_method = OPTIONS) {
+		# special treatment for Microsoft WebClient since it requires PROPPATCH
+		add_header	Allow 'OPTIONS, GET, HEAD, POST, PUT, MKCOL, MOVE, COPY, DELETE, PROPFIND, PROPPATCH';
+		add_header	DAV '1, 2';
+		return 200;
+	}
+}
+}
