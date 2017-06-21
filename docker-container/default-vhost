@@ -1,0 +1,76 @@
+server {
+	listen         80 default_server;
+	server_name    default;
+	set $root_dir  /var/www;
+	root           $root_dir;
+	source_charset UTF-8;
+	charset        UTF-8;
+
+	# Enable basic auth if required using .htpasswd file or ldap connection
+	#auth_basic           "Forbidden";
+	#auth_basic_user_file /etc/nginx/.htpasswd;
+
+	#auth_ldap "Forbidden";
+	#auth_ldap_servers myldap;
+	#auth_ldap_require "cn=webdav,ou=Groups,dc=example,dc=org"; # doesn't work
+	#auth_ldap_satisfy all;
+
+	client_body_buffer_size 128K;
+	dav_ext_methods         OPTIONS PROPFIND; # At least OPTION required since MS-WebDAV-MiniRedir requests first: OPTIONS /
+	dav_access              group:rw all:r;
+
+	# JavaScript UI
+	location / {
+		alias $root_dir/ui/;
+		# when javaScript login
+		#auth_basic off;
+		# First attempt to serve request as file, then
+		# as directory, then fall back to displaying a 404.
+		try_files $uri $uri/ =404;
+	}
+
+	# WebDAV operations
+	location ~ '^/files(/.*|$)' {
+		autoindex on;
+#		client_body_temp_path   /var/nginx-client-body; # directory to store body temporarily
+		client_body_buffer_size 128K;
+		client_max_body_size    2000M;
+		client_body_timeout     1200s;
+		dav_methods             PUT DELETE MKCOL COPY MOVE;
+		dav_ext_methods         OPTIONS PROPFIND;
+		dav_access              group:rw all:r;
+		create_full_put_path    on;
+	}
+
+	# Image resize/crop
+	location ~ '^/image/scale/(?<image>.*?)-(?<width>\d+)x(?<height>\d+)(?<extension>\.[^\.]+)$' {
+		alias $root_dir/files/$image$extension;
+		image_filter_buffer       5m;
+		image_filter_jpeg_quality 75;
+		image_filter_transparency off;
+		image_filter resize       $width $height;
+	}
+
+	location ~ '^/image/crop/(?<image>.*?)-(?<width>\d+)x(?<height>\d+)(?<extension>\.[^\.]+)$' {
+		alias $root_dir/files/$image$extension;
+		image_filter_buffer       5m;
+		image_filter_jpeg_quality 75;
+		image_filter_transparency off;
+		image_filter crop         $width $height;
+	}
+
+	# Video pseudo streaming
+	location ~ '^/video/(.*?)\.(mp4|m4v|m4a)$' {
+		alias $root_dir/files/$1.$2;
+		mp4;
+		mp4_buffer_size       1m;
+		mp4_max_buffer_size   5m;
+		client_max_body_size  80m;
+	}
+
+	location ~ '^/video/(.*?)\.flv$' {
+		alias $root_dir/files/$1.flv;
+		flv;
+		client_max_body_size  80m;
+	}
+}
