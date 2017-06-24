@@ -55,16 +55,15 @@ RUN set -x \
 	&& rm -rf $GNUPGHOME $DOWNLOAD_DIR $SRC_DIR \
 	&& apk del --purge $BUILD_DEPS
 
-COPY dist/ /var/www/
+COPY dist/ /var/www/html
 
-RUN ln -s /files /var/www/files \
-	&& chmod -R ugo-w /var/www \
-	&& mkdir -pm 775 /files \
-	&& chown root:www-data /files
+RUN chmod -R ugo-w /var/www \
+	&& mkdir -pm 770 /var/www/files \
+	&& chown root:www-data /var/www/files
 
 EXPOSE 80 443
 
-VOLUME /files
+VOLUME /var/www/files
 
 ADD nginx-conf/nginx.conf /etc/nginx/
 ADD nginx-conf/default.conf /etc/nginx/conf.d/

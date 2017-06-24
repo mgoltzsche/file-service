@@ -23,9 +23,14 @@ case "$1" in
 	run)
 		buildJS &&
 		buildImage &&
-		docker run -p 80:80 "$IMAGE_NAME"	
+		docker run --rm --name webdav-service -p 80:80 "$IMAGE_NAME"	
+		;;
+	work)
+		buildJS &&
+		buildImage &&
+		docker run --rm --name webdav-service -p 80:80 -v "$(pwd)/dist:/var/www/html" "$IMAGE_NAME"	
 		;;
 	*)
-		echo "Usage: $0 [npm|image|run]"
+		echo "Usage: $0 [npm|image|run|work]"
 		;;
 esac
