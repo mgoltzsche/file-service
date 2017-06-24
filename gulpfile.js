@@ -14,7 +14,6 @@ var del = require('del');
 var iconfont = require('gulp-iconfont');
 var consolidate = require('gulp-consolidate');
 var runTimestamp = Math.round(Date.now()/1000);
-var fontName = 'webdav-icons';
 var distDir = 'dist/'
 
 gulp.task('default', ['browserify', 'sass', 'iconfont', 'html'], function() {
