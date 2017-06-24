@@ -50,7 +50,7 @@ var modalOverlay = {
 			this.hidden = true;
 		}
 	}
-}
+};
 
 var Dialog = React.createClass({
 	getDefaultProps: function() {

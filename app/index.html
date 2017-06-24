@@ -5,13 +5,13 @@
 	<link rel="icon" href="/favicon.png" type="image/png" />
 	<link rel="icon" href="/favicon.ico" type="image/vnd.microsoft.icon" />
 	<!-- style must be loaded before script to be able include margin/padding/border in initial dialog offset calculations -->
-	<link rel="stylesheet" type="text/css" href="/resources/css/webdav-client-${version}.min.css" />
-	<script type="text/javascript" src="/resources/js/webdav-client-${version}.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="css/${name}-${version}.min.css" />
+	<script type="text/javascript" src="js/${name}-${version}.min.js"></script>
 </head>
 <body>
 <div class="main">
 	<header class="application-header">
-		<h1>Robin's files</h1>
+		<h1>Files</h1>
 	</header>
 	<main role="main">
 		<section id="loader">
@@ -23,7 +23,7 @@
 		<div id="webdav-ui"></div>
 	</main>
 	<footer class="application-footer">
-		WebDAV-UI ${version} build ${buildNumber}
+		${name} ${version}
 	</footer>
 </div>
 </body>

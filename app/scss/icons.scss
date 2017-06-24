@@ -1,4 +1,4 @@
-@import "_icons.generated.scss";
+@import "../../dist/icons.generated.scss";
 
 .dav-spinner {
 	@include animate-rotation-pulse();
