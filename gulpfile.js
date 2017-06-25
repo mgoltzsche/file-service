@@ -17,7 +17,7 @@ var runTimestamp = Math.round(Date.now()/1000);
 var distDir = 'dist/'
 
 gulp.task('default', ['browserify', 'sass', 'iconfont', 'html'], function() {
-	return gulp.src(['package.json', 'app/icons/favicon.png', 'app/icons/favicon.ico'])
+	return gulp.src(['package.json', 'app/icons/favicon.png', 'app/icons/favicon.ico', 'app/icons/error.jpg'])
 		.pipe(gulp.dest(distDir));
 });
 

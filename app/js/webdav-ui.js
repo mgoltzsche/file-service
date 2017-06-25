@@ -14,7 +14,7 @@ var Progress = require('./progress-view.js');
 var imgMarginX = 22, imgMarginY = 56;
 
 var WebDavUI = React.createClass({
-	_imageHrefPattern: /^\/files\/(.*?)\.(jpg|jpeg|png|gif)$/i,
+	_imageHrefPattern: /^\/files\/(.*?\.(jpg|jpeg|png|gif))$/i,
 	getDefaultProps: function() {
 		return {
 			rootURL: '/',
@@ -43,8 +43,8 @@ var WebDavUI = React.createClass({
 	componentWillUnmount: function() {
 		location.removeListener(this._locationListener);
 	},
-	getTransformedImageHref: function(href, mode, width, height) {
-		return href.replace(this._imageHrefPattern, '/image/' + mode + '/$1-' + width + 'x' + height + '.$2');
+	getTransformedImageHref: function(href, transform, width, height) {
+		return href.replace(this._imageHrefPattern, '/image/' + transform + '/' + width + 'x' + height + '/$1');
 	},
 	toMediaDisplayModel: function(webdavItems) {
 		var media = [];
@@ -157,7 +157,7 @@ var WebDavUI = React.createClass({
 	rewriteImageHref: function(href, maxWidth, maxHeight) {
 		var r = this._matchImageResolution(maxWidth, maxHeight);
 
-		return this.getTransformedImageHref(href, 'scale', r[0], r[1]);
+		return this.getTransformedImageHref(href, 'resize', r[0], r[1]);
 	},
 	render: function() {
 		var header = <div className="webdav-controls">

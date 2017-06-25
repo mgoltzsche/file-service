@@ -50,10 +50,17 @@ RUN set -x \
 	&& make \
 	&& make install \
 	&& ln -s /usr/local/lib/nginx/sbin/nginx /usr/local/bin/nginx \
-	&& ln -s /usr/local/lib/nginx /usr/share/nginx \
-	&& mkdir -pm 755 /etc/nginx/conf.d /var/www /var/cache/nginx /etc/nginx/ssl/private /etc/nginx/ssl/certs \
+	&& mkdir -pm 755 /etc/nginx/conf.d /var/www /etc/nginx/ssl/private /etc/nginx/ssl/certs \
 	&& rm -rf $GNUPGHOME $DOWNLOAD_DIR $SRC_DIR \
 	&& apk del --purge $BUILD_DEPS
+
+ENV NGINX_IMAGE_FILTER_JPEG_QUALITY 80
+ENV NGINX_IMAGE_FILTER_WEBP_QUALITY 80
+ENV NGINX_IMAGE_FILTER_TRANSPARENCY on
+ENV NGINX_IMAGE_FILTER_INTERLACE off
+ENV NGINX_IMAGE_FILTER_SHARPEN 0
+ENV NGINX_IMAGE_FILTER_BUFFER 4m
+
 
 COPY dist/ /var/www/html
 
@@ -67,6 +74,8 @@ VOLUME /var/www/files
 
 ADD nginx-conf/nginx.conf /etc/nginx/
 ADD nginx-conf/default.conf /etc/nginx/conf.d/
+ADD nginx-conf/image-api-help.html /var/www/index.html
+ADD entrypoint.sh /
 
-ENTRYPOINT ["/usr/local/bin/nginx"]
-CMD ["-g", "daemon off; user root;"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/usr/local/bin/nginx", "-g", "daemon off; user root;"]
