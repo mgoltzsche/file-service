@@ -1,0 +1,131 @@
+.webdav-browser {
+	background: $backgroundColor;
+	border: 1px solid $borderColor;
+	@include border-radius($borderRadius);
+
+	/* Style header ready/loading state icon */
+	.webdav-item-icon {
+		padding: 0 $margin;
+		width: 2em;
+		text-align: center;
+	}
+	.webdav-browser-header .webdav-item-icon {
+		@extend .dav;
+		display: inline-block;
+	}
+	&.loading .webdav-browser-header .webdav-item-icon {
+		@extend .dav-spinner;
+	}
+	&.ready .webdav-browser-header .webdav-item-icon {
+		@extend .dav-folder-open;
+	}
+
+	.webdav-browser-header {
+		background: $borderColorLight;
+
+		.webdav-controls {
+			display: block;
+			float: right;
+			margin: 0 $margin;
+		}
+	}
+
+	.breadcrumbs {
+		display: inline-block;
+		padding: $margin $margin $margin 0;
+
+		ul {
+			margin: 0;
+			padding: 0;
+			list-style-type: none;
+		}
+		li {
+			display: inline-block;
+			margin: 0;
+
+			&:before {
+				content: "/";
+			}
+		}
+	}
+
+	.webdav-collection-content {
+		display: table;
+		margin: 0;
+		padding: 0;
+		list-style-type: none;
+		width: 100%;
+
+		li {
+			display: table-row;
+
+			&:hover {
+				background: $backgroundColorHighlight;
+			}
+
+			.webdav-item-icon, .webdav-item-label, .webdav-item-controls, .webdav-item-size {
+				display: table-cell;
+				vertical-align: middle;
+				border-bottom: 1px solid $borderColorLight;
+			}
+
+			&:last-child {
+				.webdav-item-icon, .webdav-item-label, .webdav-item-controls, .webdav-item-size {
+					border-bottom: none;
+				}
+			}
+
+			.webdav-item-icon {
+				cursor: pointer;
+
+				img {
+					margin: 0 auto;
+					display: none;
+					max-height: 1em;
+					max-width: 2em;
+					@include border-radius($borderRadius);
+				}
+				i {
+					@extend .dav;
+				}
+				&.webdav-icon-collection i {
+					@extend .dav-folder;
+				}
+				&.webdav-icon-file i {
+					@extend .dav-file;
+				}
+
+				&.preview {
+					img {
+						display: block;
+					}
+					i {
+						display: none;
+					}
+				}
+			}
+
+			a.webdav-item-label {
+				padding: $margin $margin $margin 0;
+				line-height: 1.3em;
+
+				&:visited {
+					color: lighten($actionColor, $colorModPercent / 2);
+				}
+
+				&:hover {
+					color: $actionColor;
+				}
+			}
+
+			.webdav-item-controls, .webdav-item-size {
+				text-align: right;
+			}
+
+			.webdav-item-size {
+				padding: 0 $margin;
+				color: lighten($textColor, $colorModPercent);
+			}
+		}
+	}
+}

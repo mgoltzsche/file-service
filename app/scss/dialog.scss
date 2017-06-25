@@ -1,0 +1,72 @@
+.dialog-modal-overlay {
+	z-index: 900;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: #000000;
+	background-repeat: no-repeat;
+    background-attachment: fixed;
+    @include gradient-radial(#eeeeee, #000000);
+    @include opacity(70);
+
+	&.hidden {
+		display: none;
+	}
+}
+
+.dialog {
+	z-index: 999;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	padding: 10px;
+	@include translate(-50%, -50%);
+	background: $backgroundColor;
+	border: 1px solid $borderColor;
+	@include border-radius($borderRadius);
+	@include box-shadow(3px 5px 20px rgba(0,0,0,.5));
+
+	&.hidden {
+//		visibility: hidden;
+		top: -2000px;
+	}
+
+	.dialog-header {
+		.dialog-close {
+			display: block;
+			position: absolute;
+			top: -0.6em;
+			right: -0.6em;
+			width: 1.2em;
+			height: 1.2em;
+			margin: 0 0 -1.2em -1.2em;
+			cursor: pointer;
+			text-align: center;
+			background: $backgroundColor;
+			border: 1px solid $borderColor;
+			@include border-radius(0.6em);
+			@extend .dav, .dav-times;
+
+			&:focus, &:active {
+				border: 1px solid $actionColor;
+			}
+		}
+	}
+	.dialog-content {
+		display: block;
+		margin: 0 auto;
+		overflow: hidden;
+		max-width: 100%;
+		max-height: 100%;
+
+		img {
+			max-width: 100%;
+			max-height: 100%;
+		}
+	}
+	.dialog-footer {
+		text-align: center;
+	}
+}

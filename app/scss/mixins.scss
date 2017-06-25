@@ -1,0 +1,112 @@
+@mixin border-radius($radius) {
+	-webkit-border-radius: $radius;
+	   -moz-border-radius: $radius;
+	        border-radius: $radius;
+}
+
+@mixin border-bottom-left-radius($radius) {
+	-webkit-border-bottom-left-radius: $radius;
+	   -moz-border-bottom-left-radius: $radius;
+	        border-bottom-left-radius: $radius;
+}
+
+@mixin border-bottom-right-radius($radius) {
+	-webkit-border-bottom-right-radius: $radius;
+	   -moz-border-bottom-right-radius: $radius;
+	        border-bottom-right-radius: $radius;
+}
+
+@mixin box-shadow($shadow...) {
+	-webkit-box-shadow: $shadow;
+	   -moz-box-shadow: $shadow;
+	        box-shadow: $shadow;
+}
+
+@mixin opacity($opacity) {
+	opacity: $opacity / 100;
+	filter: alpha(opacity=$opacity);
+}
+
+@mixin gradient-horizontal-three-colors($startColor: #00b3ee, $midColor: #7a43b6, $colorStop: 50%, $endColor: #c3325f) {
+	background-color: mix($midColor, $endColor, 80%);
+	background-image: -webkit-gradient(left, linear, 0 0, 0 100%, from($startColor), color-stop($colorStop, $midColor), to($endColor));
+	background-image: -webkit-linear-gradient(left, $startColor, $midColor $colorStop, $endColor);
+	background-image: -moz-linear-gradient(left, $startColor, $midColor $colorStop, $endColor);
+	background-image: -o-linear-gradient(left, $startColor, $midColor $colorStop, $endColor);
+	background-image: linear-gradient(to right, $startColor, $midColor $colorStop, $endColor);
+	background-repeat: no-repeat;
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#{ie-hex-str($startColor)}', endColorstr='#{ie-hex-str($endColor)}', GradientType=0); // IE9 and down, gets no color-stop at all for proper fallback
+}
+
+@mixin gradient-vertical-three-colors($startColor: #00b3ee, $midColor: #7a43b6, $colorStop: 50%, $endColor: #c3325f) {
+	background-color: mix($midColor, $endColor, 80%);
+	background-image: -webkit-gradient(linear, 0 0, 0 100%, from($startColor), color-stop($colorStop, $midColor), to($endColor));
+	background-image: -webkit-linear-gradient($startColor, $midColor $colorStop, $endColor);
+	background-image: -moz-linear-gradient(top, $startColor, $midColor $colorStop, $endColor);
+	background-image: -o-linear-gradient($startColor, $midColor $colorStop, $endColor);
+	background-image: linear-gradient($startColor, $midColor $colorStop, $endColor);
+	background-repeat: no-repeat;
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#{ie-hex-str($startColor)}', endColorstr='#{ie-hex-str($endColor)}', GradientType=0); // IE9 and down, gets no color-stop at all for proper fallback
+}
+
+@mixin gradient-radial($innerColor: #555, $outerColor: #333)  {
+	background-color: $outerColor;
+	background-image: -webkit-gradient(radial, center center, 0, center center, 460, from($innerColor), to($outerColor));
+	background-image: -webkit-radial-gradient(circle, $innerColor, $outerColor);
+	background-image: -moz-radial-gradient(circle, $innerColor, $outerColor);
+	background-image: -o-radial-gradient(circle, $innerColor, $outerColor);
+	background-repeat: no-repeat;
+}
+
+@mixin translate($x, $y) {
+	-webkit-transform: translate($x, $y);
+	   -moz-transform: translate($x, $y);
+	    -ms-transform: translate($x, $y);
+	     -o-transform: translate($x, $y);
+	        transform: translate($x, $y);
+}
+
+@mixin rotate($degrees) {
+	-webkit-transform: rotate($degrees);
+	 -moz-transform: rotate($degrees);
+	  -ms-transform: rotate($degrees);
+	   -o-transform: rotate($degrees);
+	      transform: rotate($degrees);
+}
+
+/* ANIMATIONS */
+
+@-webkit-keyframes dav-kf-rotate {
+	0%   { @include rotate(0deg);   }
+	100% { @include rotate(359deg); }
+}
+@-moz-keyframes dav-kf-rotate {
+	0%   { @include rotate(0deg);   }
+	100% { @include rotate(359deg); }
+}
+@-o-keyframes dav-kf-rotate {
+	0%   { @include rotate(0deg);   }
+	100% { @include rotate(359deg); }
+}
+@keyframes dav-kf-rotate {
+	0%   { @include rotate(0deg);   }
+	100% { @include rotate(359deg); }
+}
+
+@mixin animation($animation) {
+	-webkit-animation: $animation;
+	   -moz-animation: $animation;
+	     -o-animation: $animation;
+	        animation: $animation;
+}
+
+@mixin transition($transition...) {
+  -webkit-transition: $transition;
+     -moz-transition: $transition;
+       -o-transition: $transition;
+          transition: $transition;
+}
+
+@mixin animate-rotation-pulse($rotationTime: 1s, $steps: 8) {
+	@include animation(dav-kf-rotate $rotationTime infinite steps($steps));
+}

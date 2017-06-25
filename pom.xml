@@ -1,0 +1,135 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>de.algorythm.webdav</groupId>
+	<artifactId>webdav-client</artifactId>
+	<version>0.5.0</version>
+	<packaging>pom</packaging>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.build.timestamp.format>yyMMddHHmm</maven.build.timestamp.format>
+		<buildNumber>${maven.build.timestamp}</buildNumber>
+	</properties>
+
+	<build>
+		<sourceDirectory>src/main/javascript</sourceDirectory>
+		<resources>
+			<resource>
+				<directory>src/main/javascript</directory>
+				<targetPath>js</targetPath>
+				<filtering>false</filtering>
+			</resource>
+			<resource>
+				<directory>src/main/css</directory>
+				<targetPath>css</targetPath>
+				<filtering>false</filtering>
+			</resource>
+			<resource>
+				<directory>src/main/html</directory>
+				<targetPath>${basedir}/target/web-distribution</targetPath>
+				<filtering>true</filtering><!-- required to append current version to static resources -->
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.7</version>
+				<configuration>
+					<!-- js files must remain in same or child directory as node_modules 
+						to require modules by name -->
+					<outputDirectory>${basedir}/frontend-work</outputDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<!-- Overwrite default resources to copy them before frontend plugin 
+							execution -->
+						<id>default-resources</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>resources</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>copy-resources</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/frontend-work</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}</directory>
+									<filtering>true</filtering>
+									<includes>
+										<include>package.json</include>
+										<include>gulpfile.js</include>
+									</includes>
+									<targetPath></targetPath>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Frontend Maven Plugin (see https://github.com/eirslett/frontend-maven-plugin/blob/master/frontend-maven-plugin/src/it/example%20project/pom.xml) -->
+			<plugin>
+				<groupId>com.github.eirslett</groupId>
+				<artifactId>frontend-maven-plugin</artifactId>
+				<version>0.0.26</version>
+				<configuration>
+					<srcdir>${basedir}/src/main/javascript</srcdir>
+					<outputdir>${basedir}/target/web-distribution</outputdir>
+					<workingDirectory>${basedir}/frontend-work</workingDirectory>
+					<installDirectory>${basedir}/frontend-work/node_installation</installDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<id>install node and npm</id>
+						<goals>
+							<goal>install-node-and-npm</goal>
+						</goals>
+						<configuration>
+							<nodeVersion>v0.12.2</nodeVersion>
+							<npmVersion>2.7.6</npmVersion>
+						</configuration>
+					</execution>
+					<execution>
+						<id>npm install</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>install</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>gulp build</id>
+						<goals>
+							<goal>gulp</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<descriptor>assembly-descriptor.xml</descriptor>
+				</configuration>
+				<executions>
+					<execution>
+						<id>web-distribution</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

@@ -1,0 +1,58 @@
+.progress-button {
+	width: 120px;
+
+	&.idle {
+		display: none;
+	}
+
+	progress {
+		display: inline-block;
+		width: 100%;
+		margin: 0;
+		padding: 0;
+		height: 1em;
+	}
+}
+
+.pending-tasks-list {
+
+	.total-progress-bar {
+		display: block;
+		width: 90%;
+		margin: 0 auto;
+		margin-bottom: $margin;
+	}
+
+	ul {
+		width: 100%;
+		list-style-type: none;
+	}
+
+	ul, li {
+		margin: 0;
+		padding: 0;
+	}
+
+	li {
+		padding: $margin;
+		border-bottom: 1px solid $borderColorLight;
+
+		.pending-task-label {
+			display: block;
+			overflow: hidden;
+			white-space: nowrap;
+			width: 100%;
+			text-overflow: ellipsis;
+		}
+		.pending-task-info {
+			float: right;
+		}
+		progress {
+			display: block;
+		}
+
+		&:last-child {
+			border-bottom: none;
+		}
+	}
+}

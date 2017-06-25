@@ -1,0 +1,87 @@
+$backgroundColor: #ffffff;
+$backgroundColorHighlight: #f5f5f5;
+$borderColorLight: #eeeeee;
+$borderColor: #dddddd;
+$textColor: #333333;
+$actionColor: #3377cc;
+$borderRadius: 3px;
+$margin: 10px;
+$colorModPercent: 20%;
+
+@import "mixins.scss";
+@import "buttons.scss";
+@import "dialog.scss";
+@import "pending-tasks.scss";
+@import "media-display.scss";
+@import "webdav-browser.scss";
+@import "icons.scss";
+
+html {
+    height: 100%;
+}
+body {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: $textColor;
+    font-size: 16px;
+    line-height: 1.1em;
+}
+
+#loader {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	width: 300px;
+	height: 100px;
+	margin: -70px 0 0 -100px;
+	border: 1px solid $borderColor;
+	@include border-radius($borderRadius);
+	@include box-shadow(3px 5px 20px rgba(0,0,0,.5));
+
+	.loader-hint {
+		display: inline-block;
+		vertical-align: middle;
+		padding: $margin;
+
+		h2 {
+			font-size: 1.5em;
+			margin: 0 0 $margin;
+
+			i {
+				margin-right: $margin/2;
+			}
+		}
+
+		a {
+			display: block;
+		}
+	}
+}
+
+.main {
+	margin: $margin 1%;
+
+	.application-header h1 {
+		font-size: 2em;
+	}
+
+	.application-footer {
+		margin: $margin 0 0 0;
+		text-align: center;
+		color: lighten($textColor, $colorModPercent);
+		font-size: 0.7em;
+	}
+}
+
+a {
+	&, &:visited {
+		text-decoration: none;
+		color: $actionColor;
+		outline: 0;
+	}
+
+	&:hover, &:focus, &:active {
+		text-decoration: underline;
+	}
+}

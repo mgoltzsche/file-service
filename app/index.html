@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="icon" href="/favicon.png" type="image/png" />
+	<link rel="icon" href="/favicon.ico" type="image/vnd.microsoft.icon" />
+	<!-- style must be loaded before script to be able include margin/padding/border in initial dialog offset calculations -->
+	<link rel="stylesheet" type="text/css" href="css/${name}-${version}.min.css" />
+	<script type="text/javascript" src="js/${name}-${version}.min.js"></script>
+</head>
+<body>
+<div class="main">
+	<header class="application-header">
+		<h1>Files</h1>
+	</header>
+	<main role="main">
+		<section id="loader">
+			<div class="loader-hint">
+				<h2><i class="dav dav-spinner"></i>Loading …</h2>
+				<div>Doesn't work? <a href="/files">Browse files without JavaScript</a></div>
+			</div>
+		</section>
+		<div id="webdav-ui"></div>
+	</main>
+	<footer class="application-footer">
+		${name} ${version}
+	</footer>
+</div>
+</body>
+</html>

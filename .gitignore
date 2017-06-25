@@ -1,0 +1,7 @@
+.settings
+.project
+.classpath
+node_modules
+dist/
+frontend-work
+target

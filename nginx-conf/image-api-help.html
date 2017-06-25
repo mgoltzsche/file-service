@@ -1,0 +1,17 @@
+<html>
+	<head>
+		<title>Not found - Image API</title>
+	</head>
+	<body>
+		<h1>Not found - Image API</h1>
+		<p>You requested a missing resource or an unsupported URL!</p>
+		<p>This service scales/crops images with fixed configurable resolutions and provides metadata.</p>
+		<h2>Endpoints</h2>
+			<ul>
+				<li><pre>/image/(resize|crop)/{WIDTH}x{HEIGHT}/{IMAGE}</pre> Provides a resized/cropped version of IMAGE.</li>
+				<li><pre>/image/info/{IMAGE}</pre> Provides image type and resolution of IMAGE as JSON.</li>
+				<li><pre>/image/info</pre> Lists available image resolutions and transformations as JSON.</li>
+			</ul>
+		</p>
+	</body>
+</html>

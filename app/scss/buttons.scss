@@ -1,0 +1,62 @@
+.button {
+	&, &:visited {
+		display: inline-block;
+		margin: $margin/2 0 $margin/2 $margin;
+		padding: $margin/2;
+		color: $actionColor;
+		background: $borderColorLight;
+		border: 1px solid darken($borderColorLight, $colorModPercent / 2);
+		@include border-radius($borderRadius);
+		outline: 0;
+	}
+
+	&, &:focus, &:hover, &:active, &:visited {
+		text-decoration: none;
+	}
+
+	&:hover, &:active {
+		color: $backgroundColor;
+		background: $actionColor;
+		border: 1px solid $actionColor;
+	}
+
+	&:focus {
+		border: 1px solid $actionColor;
+	}
+
+	&.primary {
+		&, &:visited {
+			color: $backgroundColor;
+			background: $actionColor;
+			border: 1px solid $actionColor;
+		}
+
+		&:hover, &:active {
+			text-decoration: underline;
+
+			&:before {
+				text-decoration: none;
+			}
+		}
+
+		&:focus {
+			border: 1px solid $textColor;
+		}
+		/*&:hover, &:active, &:focus {
+			text-decoration: underline;
+
+			&:before {
+				text-decoration: none;
+			}
+		}*/
+	}
+}
+
+.upload-button {
+	display: inline-block;
+	@extend .dav, .dav-plus;
+
+	form {
+		display: none;
+	}
+}

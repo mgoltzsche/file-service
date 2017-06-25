@@ -1,0 +1,123 @@
+.media-display {
+	.dialog-content {
+		text-align: center;
+		@include border-radius($borderRadius);
+		@include border-bottom-left-radius(0);
+		@include border-bottom-right-radius(0);
+	}
+	.dialog-footer {
+		height: 1.5em;
+		display: table;
+		margin: 0 auto;
+		margin-top: $margin;
+
+		.media-display-label {
+			display: table-cell;
+			text-align: center;
+		}
+		.previous, .next {
+			@extend .dav;
+			display: table-cell;
+			cursor: pointer;
+
+			&:before {
+				font-weight: bold;
+			}
+			&.hidden {
+				visibility: hidden;
+			}
+		}
+		.previous {
+			@extend .dav-caret-left;
+			padding-right: $margin;
+		}
+		.next {
+			@extend .dav-caret-right;
+			padding-left: $margin;
+		}
+	}
+
+	.image-display, .stream-display, .iframe-display, .download-display {
+			display: none;
+	}
+	.image-display, .stream-display, .iframe-display {
+			border: none;
+	}
+	.media-display-image .image-display {
+		display: inline-block;
+		max-width: 100%;
+		max-height: 100%;
+	}
+	.media-display-stream {
+		height: 100%;
+
+		.stream-display {
+			display: inline-block;
+		}
+	}
+	.media-display-iframe .iframe-display {
+		display: inline-block;
+	}
+	.media-display-download {
+		width: 100%;
+		height: 100%;
+
+		.download-display {
+			display: inline-block;
+			text-align: center;
+			@extend .dav, .dav-download;
+			position: relative;
+			top: 50%;
+			margin: -0.5em 0 0 0;
+
+			&:before {
+				padding-right: $margin/2;
+			}
+		}
+	}
+}
+
+.image-loader {
+	text-align: center;
+
+	.progress-indicator {
+		display: none;
+		@extend .dav, .dav-spinner;
+		padding: 20px;
+		font-size: 30px;
+	}
+	&.loading {
+		img {
+			display: none;
+		}
+		.progress-indicator {
+			display: block;
+		}
+	}
+}
+
+.player {
+	&.playing {
+		cursor: default;
+
+		video {
+			display: block;
+		}
+	}
+	&.paused {
+		color: $actionColor;
+		cursor: pointer;
+		@extend .dav, .dav-play-circle;
+		&:before {
+			font-size: 70px;
+			width: 100%;
+			position: relative;
+			top: 50%;
+			margin: -35px 0 0 0;
+		}
+
+		video {	
+			display: none;
+		}
+	}
+}
