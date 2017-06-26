@@ -29,6 +29,7 @@ WebDAV is supported using nginx' [ngx_http_dav_module](http://nginx.org/en/docs/
 ## Image transformations
 
 Image transformations are supported by nginx' [ngx_http_image_filter_module](http://nginx.org/en/docs/http/ngx_http_image_filter_module.html).
+All transformed images are cached.
 
 To prevent the service from DOS attacks and to control cache growth a limited amount of supported image resolutions must be configured in nginx.
 This can be done using container environment variables with the following name convention:
@@ -51,18 +52,22 @@ When the service is accessible in the internet authentication and authorization 
 
 ### SSL
 
-This service's nginx installation can be configured to use SSL since it has been compiled with SSL (see comments in [nginx-conf/default.conf]).
-However it is recommended to configure SSL in your proxy server or load balancer that passes traffic through to avoid useless SSL overhead.
-Hence you do not need to enable SSL as long as you do not publish your server in a public network.
+Although SSL in disabled per default this service's nginx installation can be configured to use SSL (see comments in [nginx-conf/default.conf]).
+However it is recommended to configure SSL only in your proxy server or load balancer that passes traffic through to avoid useless SSL overhead.
+Hence in most cases you do not need to enable SSL as long as you do not publish your service instance directly in a public network.
 
-### Authentication & authorization approaches
+### Authentication & authorization
+
+Per default this service comes with no access restrictions at all.
+Approaches of how to authenticate and authorize users are listed as follows:
 
 - Configure basic auth using a .htaccess file (see comments in [nginx-conf/default.conf])
 - Use a [Keycloak](http://www.keycloak.org/) based proxy to secure the service in a unified manner.
 
 Earlier versions supported basic auth and authorization using LDAP.
 To add LDAP support nginx must be compiled with the 3rd party module [nginx-auth-ldap](https://github.com/kvspb/nginx-auth-ldap).
-This approach has been deprecated due conflicts between openssl-dev and openldap-dev in alpine >3.4 and in favour of the more complete keycloak solution mentioned above.
+This approach has been deprecated due conflicts between openssl-dev and openldap-dev in alpine >3.4 and in favour of the more complete keycloak approach mentioned above.
+
 
 ## TL;DR
 
