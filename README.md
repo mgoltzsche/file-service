@@ -43,3 +43,8 @@ For instance to serve resized images within a bounding box of 150x200 at `/image
 ## Pseudo streaming
 
 HTTP pseudo streaming is supported for mp4 and flv files.
+
+
+## TL:DR
+
+I have built this service once as a platform to share files with my friends and to evaluate React and the nodejs ecosystem.
