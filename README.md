@@ -19,7 +19,7 @@ Note that everything is built in a container. Finally the service is run in a co
 
 ## UI
 
-The UI is written in JavaScript using React and built with npm and gulp.
+The UI is written in JavaScript using [React](https://facebook.github.io/react/) and built with [npm](https://www.npmjs.com/) and [gulp](http://gulpjs.com/).
 
 
 ## WebDAV
@@ -37,8 +37,7 @@ This can be done using container environment variables with the following name c
 IMAGE_(RESIZE|CROP)_{WIDTH}_{HEIGHT}=true
 ```
 
-For instance to serve resized images within a bounding box of 150x200 at `/image/resize/150x200/{IMAGEFILE}` set:
-```IMAGE_RESIZE_150_200=true```
+For instance to serve resized images within a bounding box of 150x200 at `/image/resize/150x200/{IMAGEFILE}` set `IMAGE_RESIZE_150_200=true`.
 
 
 ## Pseudo streaming
