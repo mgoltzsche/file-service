@@ -3,7 +3,7 @@ Service to share and browse files using a JavaScript UI and WebDAV based on [ngi
 
 ## Requirements
 
-- Docker
+- [Docker](https://www.docker.com/)
 - optional: [nodejs](https://nodejs.org/), [npm](https://www.npmjs.com/), [gulp](http://gulpjs.com/)
 
 
@@ -52,7 +52,7 @@ When the service is accessible in the internet authentication and authorization 
 
 ### SSL
 
-Although SSL in disabled per default this service's nginx installation can be configured to use SSL (see comments in [nginx-conf/default.conf]).
+Although SSL in disabled per default this service's nginx installation can be configured to use SSL (see comments in default.conf).
 However it is recommended to configure SSL only in your proxy server or load balancer that passes traffic through to avoid useless SSL overhead.
 Hence in most cases you do not need to enable SSL as long as you do not publish your service instance directly in a public network.
 
@@ -61,7 +61,7 @@ Hence in most cases you do not need to enable SSL as long as you do not publish 
 Per default this service comes with no access restrictions at all.
 Approaches of how to authenticate and authorize users are listed as follows:
 
-- Configure basic auth using a .htaccess file (see comments in [nginx-conf/default.conf])
+- Configure basic auth using a .htaccess file (see comments in default.conf)
 - Use a [Keycloak](http://www.keycloak.org/) based proxy to secure the service in a unified manner.
 
 Earlier versions supported basic auth and authorization using LDAP.
