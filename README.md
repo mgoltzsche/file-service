@@ -14,6 +14,7 @@ To build and run the service using docker run the following shell script:
 ```
 ./make.sh js image run
 ```
+Note that everything is built in a container. Finally the service is run in a container too.
 
 
 ## UI
@@ -31,13 +32,13 @@ WebDAV is supported using nginx' [ngx_http_dav_module](http://nginx.org/en/docs/
 Image transformations are supported by nginx' [ngx_http_image_filter_module](http://nginx.org/en/docs/http/ngx_http_image_filter_module.html).
 
 To prevent the service from DOS attacks and to control cache growth a limited amount of supported image resolutions must be configured in nginx.
-This can be done using environment variables with the following name convention:
+This can be done using container environment variables with the following name convention:
 ```
 IMAGE_(RESIZE|CROP)_{WIDTH}_{HEIGHT}=true
 ```
 
-For instance to support cropped images of size 150x200 set:
-```IMAGE_CROP_150_200=true```
+For instance to serve resized images within a bounding box of 150x200 at `/image/resize/150x200/{IMAGEFILE}` set:
+```IMAGE_RESIZE_150_200=true```
 
 
 ## Pseudo streaming
