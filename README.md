@@ -1,11 +1,10 @@
 # file-service
 Service to share and browse files using a JavaScript UI and WebDAV based on [nginx](http://nginx.org).
 
-
 ## Requirements
 
 - Docker
-- optional: nodejs, npm, gulp
+- optional: [nodejs](https://nodejs.org/), [npm](https://www.npmjs.com/), [gulp](http://gulpjs.com/)
 
 
 ## Run
@@ -45,6 +44,26 @@ For instance to serve resized images within a bounding box of 150x200 at `/image
 HTTP pseudo streaming is supported for mp4 and flv files.
 
 
-## TL:DR
+## Security
+
+Per default this service runs without SSL and without any file access restrictions.
+When the service is accessible in the internet authentication and authorization as well as SSL must be configured.
+
+### SSL
+
+This service's nginx installation can be configured to use SSL since it has been compiled with SSL (see comments in [nginx-conf/default.conf]).
+However it is recommended to configure SSL in your proxy server or load balancer that passes traffic through to avoid useless SSL overhead.
+Hence you do not need to enable SSL as long as you do not publish your server in a public network.
+
+### Authentication & authorization approaches
+
+- Configure basic auth using a .htaccess file (see comments in [nginx-conf/default.conf])
+- Use a [Keycloak](http://www.keycloak.org/) based proxy to secure the service in a unified manner.
+
+Earlier versions supported basic auth and authorization using LDAP.
+To add LDAP support nginx must be compiled with the 3rd party module [nginx-auth-ldap](https://github.com/kvspb/nginx-auth-ldap).
+This approach has been deprecated due conflicts between openssl-dev and openldap-dev in alpine >3.4 and in favour of the more complete keycloak solution mentioned above.
+
+## TL;DR
 
 I have built this service once as a platform to share files with my friends and to evaluate React and the nodejs ecosystem.
