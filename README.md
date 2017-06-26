@@ -66,7 +66,7 @@ Approaches of how to authenticate and authorize users are listed as follows:
 
 Earlier versions supported basic auth and authorization using LDAP.
 To add LDAP support nginx must be compiled with the 3rd party module [nginx-auth-ldap](https://github.com/kvspb/nginx-auth-ldap).
-This approach has been deprecated due conflicts between openssl-dev and openldap-dev in alpine >3.4 and in favour of the more complete keycloak approach mentioned above.
+This approach has been deprecated in favour of the more complete keycloak approach mentioned above and completely removed from the project due conflicts between openssl-dev and openldap-dev in alpine >3.4.
 
 
 ## TL;DR
