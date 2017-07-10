@@ -13,7 +13,11 @@ To build and run the service using docker run the following shell script:
 ```
 ./make.sh js image run
 ```
-Note that everything is built in a container. Finally the service is run in a container too.
+Note that everything is built and run in a container.
+
+Since the service is published your host machine's port 80 you need to stop any other service that uses that port on your machine.
+
+Finally you can browse the UI at http://localhost/ as well as the image server at http://localhost/image/.
 
 
 ## UI

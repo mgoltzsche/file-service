@@ -17,7 +17,7 @@ generateImageServerConfig() {
 	done
 	INFO_JSON="$(echo "$INFO_JSON" | sed -E 's/^,//')"
 	INFO_JSON="{\"transformations\": [$INFO_JSON]}"
-	cat > /etc/nginx/image-transform.generated.conf <<-EOF
+	cat > /etc/nginx/image-transform.generated <<-EOF
 		image_filter_jpeg_quality $NGINX_IMAGE_FILTER_JPEG_QUALITY;
 		image_filter_webp_quality $NGINX_IMAGE_FILTER_WEBP_QUALITY;
 		image_filter_transparency $NGINX_IMAGE_FILTER_TRANSPARENCY;

@@ -59,8 +59,7 @@ ENV NGINX_IMAGE_FILTER_WEBP_QUALITY 80
 ENV NGINX_IMAGE_FILTER_TRANSPARENCY on
 ENV NGINX_IMAGE_FILTER_INTERLACE off
 ENV NGINX_IMAGE_FILTER_SHARPEN 0
-ENV NGINX_IMAGE_FILTER_BUFFER 4m
-
+ENV NGINX_IMAGE_FILTER_BUFFER 8m
 
 COPY dist/ /var/www/html
 
@@ -73,6 +72,7 @@ EXPOSE 80 443
 VOLUME /var/www/files
 
 ADD nginx-conf/nginx.conf /etc/nginx/
+ADD nginx-conf/proxy_params /etc/nginx/
 ADD nginx-conf/default.conf /etc/nginx/conf.d/
 ADD nginx-conf/image-api-help.html /var/www/index.html
 ADD entrypoint.sh /
